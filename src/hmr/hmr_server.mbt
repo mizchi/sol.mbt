@@ -13,8 +13,8 @@ pub struct HmrServer {
 ///|
 /// Create and start HMR WebSocket server on specified port
 /// Uses Node.js 'ws' package via dynamic import
-pub async fn HmrServer::start(port : Int) -> HmrServer {
-  let inner = create_ws_server_async(port)
+pub fn HmrServer::start(port : Int) -> HmrServer {
+  let inner = create_ws_server_sync(port)
   let server = HmrServer::{ inner, port }
   // Log connections
   inner._call("on", [
@@ -177,6 +177,18 @@ async fn create_ws_server_async(port : Int) -> @js.Any {
   let wss_class = ws["WebSocketServer"]
   create_wss_instance(wss_class, port)
 }
+
+///|
+/// Create WebSocket server synchronously using require
+fn create_ws_server_sync(port : Int) -> @js.Any {
+  let wss_class = get_wss_class()
+  create_wss_instance(wss_class, port)
+}
+
+///|
+/// Get WebSocketServer class using require (sync)
+extern "js" fn get_wss_class() -> @js.Any =
+  #| () => require('ws').WebSocketServer
 
 ///|
 /// Dynamic import for 'ws' module (ESM compatible)

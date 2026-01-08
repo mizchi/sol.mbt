@@ -213,15 +213,20 @@ pub async fn run_ssg_dev(
   println(@colorette.cyan("Starting SSG development server..."))
   println("")
 
+  println("[DEBUG] Before highlighter creation")
   // Create highlighter once for reuse
   let highlighter = @shiki.create_default_highlighter().wait()
+  println("[DEBUG] After highlighter creation")
 
   // Initial build
   run_ssg_initial_build(config, cwd, highlighter)
+  println("[DEBUG] After initial build")
 
   // Start HMR WebSocket server
   let hmr_port = 24679
+  println("[DEBUG] Starting HMR server")
   let hmr_server = @hmr.HmrServer::start(hmr_port)
+  println("[DEBUG] HMR server started")
 
   // Start HTTP server
   let output_dir = @path.join2(cwd, config.output_dir)
@@ -475,9 +480,15 @@ fn find_luna_path(start_dir : String) -> String {
   // Check current directory and up to 3 parent levels
   let mut dir = start_dir
   for _ in 0..<4 {
+    // Check js/luna/src first
     let luna_src = @path.join2(dir, "js/luna/src")
     if @fs.existsSync(luna_src) {
       return luna_src
+    }
+    // Check .mooncakes/mizchi/luna/js/luna/src (mooncakes path)
+    let mooncakes_luna = @path.join2(dir, ".mooncakes/mizchi/luna/js/luna/src")
+    if @fs.existsSync(mooncakes_luna) {
+      return mooncakes_luna
     }
     // Go up one level
     let parent = @path.dirname(dir)

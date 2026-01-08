@@ -2263,9 +2263,15 @@ fn find_luna_path(start_dir : String) -> String {
   // Check current directory and up to 3 parent levels
   let mut dir = start_dir
   for _ in 0..<4 {
+    // Check js/luna/src first
     let luna_src = @path.join2(dir, "js/luna/src")
     if @fs.existsSync(luna_src) {
       return luna_src
+    }
+    // Check .mooncakes/mizchi/luna/js/luna/src (mooncakes path)
+    let mooncakes_luna = @path.join2(dir, ".mooncakes/mizchi/luna/js/luna/src")
+    if @fs.existsSync(mooncakes_luna) {
+      return mooncakes_luna
     }
     // Go up one level
     let parent = @path.dirname(dir)

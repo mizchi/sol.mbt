@@ -20,12 +20,11 @@ pub fn parse_ssg_from_sol_config(json_str : String) -> SsgConfig? {
     let json = @json.parse(json_str.view())
     guard json is Object(obj) else { return None }
 
-    // Get ssg section
-    guard obj.get("ssg") is Some(Object(ssg_obj)) else {
-      // No ssg section, return default
-      return Some(SsgConfig::default())
+    // Get ssg section if exists, otherwise use root object
+    match obj.get("ssg") {
+      Some(Object(ssg_obj)) => parse_ssg_object(ssg_obj)
+      _ => parse_ssg_object(obj)
     }
-    parse_ssg_object(ssg_obj)
   } catch {
     _ => None
   }
