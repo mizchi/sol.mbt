@@ -213,20 +213,15 @@ pub async fn run_ssg_dev(
   println(@colorette.cyan("Starting SSG development server..."))
   println("")
 
-  println("[DEBUG] Before highlighter creation")
   // Create highlighter once for reuse
   let highlighter = @shiki.create_default_highlighter().wait()
-  println("[DEBUG] After highlighter creation")
 
   // Initial build
   run_ssg_initial_build(config, cwd, highlighter)
-  println("[DEBUG] After initial build")
 
   // Start HMR WebSocket server
   let hmr_port = 24679
-  println("[DEBUG] Starting HMR server")
-  let hmr_server = @hmr.HmrServer::start(hmr_port)
-  println("[DEBUG] HMR server started")
+  let hmr_server = @hmr.HmrServer::start(hmr_port).wait()
 
   // Start HTTP server
   let output_dir = @path.join2(cwd, config.output_dir)

@@ -65,6 +65,14 @@ test-xplat:
     moon test --target all src/router
     moon test --target all src/routes
 
+# E2E テスト
+test-e2e:
+    pnpm playwright test --config e2e/playwright.config.mts
+
+# E2E テスト (UI モード)
+test-e2e-ui:
+    pnpm playwright test --config e2e/playwright.config.mts --ui
+
 # =============================================================================
 # CLI
 # =============================================================================

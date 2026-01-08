@@ -33,6 +33,8 @@ jobs:
         run: moon build --target js
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
+      - name: E2E tests (core)
+        run: pnpm test:e2e
       - name: E2E tests (sol_app)
         working-directory: examples/sol_app
         run: |

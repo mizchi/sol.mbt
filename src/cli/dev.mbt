@@ -253,7 +253,7 @@ async fn run_dev_watch_mode(cwd : String, port : String) -> Unit {
       set_env("PORT", port)
       set_env("SOL_DEV", "1") // Enable HMR script injection
       // Start HMR WebSocket server
-      let hmr_server = @hmr.HmrServer::start(hmr_port)
+      let hmr_server = @hmr.HmrServer::start(hmr_port).wait()
       // Start server process (non-blocking)
       let server_proc : Ref[@child_process.ChildProcess?] = { val: None }
       fn start_server() -> Unit {

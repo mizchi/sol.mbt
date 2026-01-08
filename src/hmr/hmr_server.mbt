@@ -11,29 +11,25 @@ pub struct HmrServer {
 }
 
 ///|
-/// Create and start HMR WebSocket server on specified port
+/// Create and start HMR WebSocket server on specified port (async version)
 /// Uses Node.js 'ws' package via dynamic import
-pub fn HmrServer::start(port : Int) -> HmrServer {
-  let inner = create_ws_server_sync(port)
-  let server = HmrServer::{ inner, port }
-  // Log connections
-  inner._call("on", [
-    @js.any("connection"),
-    @js.any(fn(_ws : @js.Any) {
-      println(@colorette.gray("[HMR] Client connected"))
-    }),
-  ])
-  |> ignore
-  inner._call("on", [
-    @js.any("error"),
-    @js.any(fn(err : @js.Any) {
-      @console.error(@js.any("[HMR] Server error: \{err}"))
-    }),
-  ])
-  |> ignore
-  println(@colorette.cyan("[HMR] WebSocket server started on port \{port}"))
-  server
+/// Returns a Promise that resolves when server is ready
+pub fn HmrServer::start(port : Int) -> @js.Promise[HmrServer] {
+  create_hmr_server_promise(port)
 }
+
+///|
+/// Create HMR server promise (internal)
+extern "js" fn create_hmr_server_promise(port : Int) -> @js.Promise[HmrServer] =
+  #| (port) => {
+  #|   return import('ws').then(({ WebSocketServer }) => {
+  #|     const wss = new WebSocketServer({ port });
+  #|     wss.on('connection', () => console.log('\x1b[90m[HMR] Client connected\x1b[0m'));
+  #|     wss.on('error', (err) => console.error('[HMR] Server error:', err));
+  #|     console.log(`\x1b[36m[HMR] WebSocket server started on port ${port}\x1b[0m`);
+  #|     return { inner: wss, port };
+  #|   });
+  #| }
 
 ///|
 /// Broadcast message to all connected clients
@@ -170,34 +166,6 @@ fn escape_json_string(s : String) -> String {
 // FFI Functions
 // =============================================================================
 
-///|
-/// Create WebSocket server using 'ws' package (async for ESM compatibility)
-async fn create_ws_server_async(port : Int) -> @js.Any {
-  let ws = import_ws().wait()
-  let wss_class = ws["WebSocketServer"]
-  create_wss_instance(wss_class, port)
-}
-
-///|
-/// Create WebSocket server synchronously using require
-fn create_ws_server_sync(port : Int) -> @js.Any {
-  let wss_class = get_wss_class()
-  create_wss_instance(wss_class, port)
-}
-
-///|
-/// Get WebSocketServer class using require (sync)
-extern "js" fn get_wss_class() -> @js.Any =
-  #| () => require('ws').WebSocketServer
-
-///|
-/// Dynamic import for 'ws' module (ESM compatible)
-extern "js" fn import_ws() -> @js.Promise[@js.Any] =
-  #| () => import('ws')
-
-///|
-extern "js" fn create_wss_instance(wss_class : @js.Any, port : Int) -> @js.Any =
-  #| (WSSClass, port) => new WSSClass({ port })
 
 ///|
 /// Broadcast message to all clients

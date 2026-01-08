@@ -44,14 +44,17 @@ fn load_asset(relative_path : String) -> String {
     None => ()
   }
 
-  // Development: running from luna.mbt repo root
-  paths.push("src/sol/ssg/assets/" + relative_path)
+  // Development: running from sol.mbt repo root
+  paths.push("src/ssg/assets/" + relative_path)
   // Development: running from website/ or examples/ subdirectory
-  paths.push("../src/sol/ssg/assets/" + relative_path)
+  paths.push("../src/ssg/assets/" + relative_path)
   // npm package: @luna_ui/sol installed via npm (relative to cwd)
   paths.push("node_modules/@luna_ui/sol/assets/" + relative_path)
-  // Examples/subprojects: path dependency to parent luna.mbt
-  paths.push("../../src/sol/ssg/assets/" + relative_path)
+  // Examples/subprojects: path dependency to parent sol.mbt
+  paths.push("../../src/ssg/assets/" + relative_path)
+  // Mooncakes: installed via moon update
+  paths.push(".mooncakes/mizchi/luna/src/sol/ssg/assets/" + relative_path)
+  paths.push("../.mooncakes/mizchi/luna/src/sol/ssg/assets/" + relative_path)
   for p in paths {
     try {
       return @fs.read_file_as_string(p)
