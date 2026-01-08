@@ -1,0 +1,108 @@
+name: check
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  # Fast: moon check
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - uses: illusory0x0/setup-moonbit@v0.1.0
+        with:
+          version: stable
+      - run: |
+          moon update
+          moon install
+      - name: moon check
+        run: moon check --target js
+
+  # MoonBit unit tests
+  test-moonbit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - uses: illusory0x0/setup-moonbit@v0.1.0
+        with:
+          version: stable
+      - run: |
+          moon update
+          moon install
+      - name: Setup CJS test environment
+        run: |
+          mkdir -p target/js/debug/test
+          echo '{"type": "commonjs"}' > target/js/debug/test/package.json
+      - name: moon test
+        run: moon test --target js
+
+  # Cross-platform tests (non-JS targets: wasm, wasm-gc, native)
+  test-xplat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: illusory0x0/setup-moonbit@v0.1.0
+        with:
+          version: stable
+      - run: |
+          moon update
+          moon install
+      - name: Test parser (wasm, wasm-gc, native)
+        run: |
+          moon test --target wasm src/parser
+          moon test --target wasm-gc src/parser
+          moon test --target native src/parser
+      - name: Test router (wasm, wasm-gc, native)
+        run: |
+          moon test --target wasm src/router
+          moon test --target wasm-gc src/router
+          moon test --target native src/router
+      - name: Test routes (wasm, wasm-gc, native)
+        run: |
+          moon test --target wasm src/routes
+          moon test --target wasm-gc src/routes
+          moon test --target native src/routes
+
+  # Example projects
+  test-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: illusory0x0/setup-moonbit@v0.1.0
+        with:
+          version: stable
+      - run: |
+          moon update
+          moon install
+      - name: Build examples
+        run: |
+          moon info
+          moon build --target js -C examples/sol_app

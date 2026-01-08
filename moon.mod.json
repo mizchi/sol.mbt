@@ -1,0 +1,27 @@
+{
+  "name": "mizchi/sol",
+  "version": "0.1.0",
+  "deps": {
+    "mizchi/luna": "0.4.1",
+    "moonbitlang/async": "0.15.0",
+    "moonbitlang/x": "0.4.38",
+    "moonbitlang/parser": "0.1.12",
+    "mizchi/npm_typed": "0.1.6",
+    "mizchi/markdown": "0.3.3",
+    "mizchi/js": "0.10.7",
+    "mizchi/jsonschema": "0.6.0",
+    "mizchi/process_pool": "0.1.1"
+  },
+  "readme": "README.md",
+  "repository": "https://github.com/mizchi/sol",
+  "license": "MIT",
+  "keywords": [
+    "sol",
+    "ssg",
+    "ssr"
+  ],
+  "description": "SSR/SSG Framework for Luna UI",
+  "source": "src",
+  "warn-list": "-6-unused_trait_bound",
+  "preferred-target": "js"
+}
