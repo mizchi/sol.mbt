@@ -80,6 +80,34 @@ jobs:
           moon test --target native src/parser
       # Note: router and routes are skipped - they depend on mizchi/js which requires JS FFI
 
+  # E2E tests with Playwright
+  test-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - uses: illusory0x0/setup-moonbit@v0.1.0
+        with:
+          version: stable
+      - run: |
+          moon update
+          moon install
+      - name: Install Playwright browsers
+        run: pnpm playwright install --with-deps chromium
+      - name: Build CLI for WebServer
+        run: moon build --target js
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
   # Example projects
   test-examples:
     runs-on: ubuntu-latest
