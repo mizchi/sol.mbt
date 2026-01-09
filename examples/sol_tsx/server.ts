@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { routes, config } from './app/server/routes';
-import { registerRoutes } from '../../js/sol/server-runtime';
+import { registerRoutes } from '@sol/core/server-runtime';
 
 const app = new Hono();
 const routerConfig = config();

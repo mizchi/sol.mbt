@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
+    "@sol/core": "workspace:*",
     "hono": "^4.0.0"
   },
   "devDependencies": {

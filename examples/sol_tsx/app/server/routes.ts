@@ -4,7 +4,7 @@ import {
   type SolRoute,
   type RouterConfig,
   DEFAULT_ROOT_TEMPLATE,
-} from '../../../../js/sol/routes';
+} from '@sol/core/routes';
 import {
   div,
   h1,
@@ -23,7 +23,7 @@ import {
   span,
   raw,
   renderToString,
-} from '../../../../js/sol/html';
+} from '@sol/core/html';
 
 // ============================================================================
 // Layouts

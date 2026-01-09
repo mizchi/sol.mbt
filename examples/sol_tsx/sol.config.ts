@@ -1,4 +1,4 @@
-import { defineConfig } from '../../js/sol/config';
+import { defineConfig } from '@sol/core/config';
 
 export default defineConfig({
   routes: 'app/server',
