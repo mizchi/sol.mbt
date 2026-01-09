@@ -78,12 +78,7 @@ jobs:
           moon test --target wasm src/parser
           moon test --target wasm-gc src/parser
           moon test --target native src/parser
-      # Note: router is skipped - it depends on mizchi/js which requires JS FFI
-      - name: Test routes (wasm, wasm-gc, native)
-        run: |
-          moon test --target wasm src/routes
-          moon test --target wasm-gc src/routes
-          moon test --target native src/routes
+      # Note: router and routes are skipped - they depend on mizchi/js which requires JS FFI
 
   # Example projects
   test-examples:
