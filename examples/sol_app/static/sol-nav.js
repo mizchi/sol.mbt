@@ -3,8 +3,22 @@
 	let isNavigating = false;
 	const cache = /* @__PURE__ */ new Map();
 	const setHTML = (target, html) => {
-		if (target.setHTMLUnsafe) target.setHTMLUnsafe(html);
-		else target.innerHTML = html;
+		// Always use innerHTML and manually process DSD templates for consistent behavior
+		target.innerHTML = html;
+		// Process declarative shadow DOM templates that weren't parsed during innerHTML
+		const templates = target.querySelectorAll('template[shadowrootmode]');
+		console.log('[sol-nav] Processing DSD templates:', templates.length);
+		templates.forEach(tpl => {
+			const mode = tpl.getAttribute('shadowrootmode');
+			const parent = tpl.parentElement;
+			console.log('[sol-nav] Template parent:', parent?.tagName, 'hasShadowRoot:', !!parent?.shadowRoot);
+			if (parent && !parent.shadowRoot) {
+				const shadow = parent.attachShadow({ mode });
+				shadow.appendChild(tpl.content.cloneNode(true));
+				tpl.remove();
+				console.log('[sol-nav] Created shadow root for', parent.tagName);
+			}
+		});
 	};
 	const navigate = async (url, replace = false) => {
 		if (isNavigating) return;
@@ -46,6 +60,7 @@
 			else w.history.pushState({ sol: true }, "", url);
 			w.scrollTo(0, 0);
 			w.__LUNA_SCAN__?.();
+			w.__LUNA_WC_CLEAR_LOADED__?.();
 			w.__LUNA_WC_SCAN__?.();
 		} catch (e) {
 			console.error("Sol navigation failed:", e);

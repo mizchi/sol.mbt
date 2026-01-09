@@ -193,7 +193,7 @@ test.describe('Sol App E2E', () => {
       // Navigate to users
       await page.locator('.admin-sidebar a[href="/admin/users"]').click();
       await expect(page).toHaveURL('/admin/users');
-      await expect(page.locator('h1')).toContainText('Users');
+      await expect(page.locator('h1')).toContainText('User Management');
 
       // Navigate back to dashboard
       await page.locator('.admin-sidebar a[href="/admin"]').click();
@@ -220,6 +220,90 @@ test.describe('Sol App E2E', () => {
 
       // Verify admin layout is no longer present
       await expect(page.locator('.admin-sidebar')).not.toBeVisible();
+    });
+  });
+
+  test.describe('WC Counter Navigation', () => {
+    test('WC counter works after CSR navigation from home', async ({ page }) => {
+      // Start at home page
+      await page.goto('/');
+      await expect(page).toHaveURL('/');
+
+      // Navigate to WC Counter via sol-link (CSR navigation)
+      await page.locator('nav a[href="/wc-counter"]').first().click();
+      await expect(page).toHaveURL('/wc-counter');
+
+      // Wait for WC hydration
+      await page.waitForTimeout(500);
+
+      // Verify WC counter is visible
+      const wcCounter = page.locator('wc-counter');
+      await expect(wcCounter).toBeVisible();
+
+      // Get initial count
+      const countDisplay = wcCounter.locator('.count-display');
+      await expect(countDisplay).toBeVisible();
+      const initialText = await countDisplay.textContent();
+      const initialValue = parseInt(initialText || '0', 10);
+
+      // Click increment button - this is the key test!
+      const incButton = wcCounter.locator('button.inc');
+      await incButton.click();
+
+      // Verify count incremented (proves shadow DOM and event handlers work)
+      await expect(countDisplay).toHaveText(String(initialValue + 1));
+    });
+
+    test('WC counter works on direct page load', async ({ page }) => {
+      // Direct navigation to WC Counter (SSR)
+      await page.goto('/wc-counter');
+      await expect(page).toHaveURL('/wc-counter');
+
+      // Wait for hydration
+      await page.waitForTimeout(500);
+
+      // Verify WC counter works
+      const wcCounter = page.locator('wc-counter');
+      const countDisplay = wcCounter.locator('.count-display');
+      const initialText = await countDisplay.textContent();
+      const initialValue = parseInt(initialText || '0', 10);
+
+      // Click increment
+      await wcCounter.locator('button.inc').click();
+      await expect(countDisplay).toHaveText(String(initialValue + 1));
+    });
+
+    test('WC counter re-hydrates after round-trip navigation', async ({ page }) => {
+      // Start at home
+      await page.goto('/');
+      await expect(page).toHaveURL('/');
+
+      // Navigate to WC Counter
+      await page.locator('nav a[href="/wc-counter"]').first().click();
+      await expect(page).toHaveURL('/wc-counter');
+      await page.waitForTimeout(500);
+
+      // Click increment
+      const wcCounter = page.locator('wc-counter');
+      await wcCounter.locator('button.inc').click();
+
+      // Navigate to About
+      await page.locator('nav a[href="/about"]').first().click();
+      await expect(page).toHaveURL('/about');
+
+      // Navigate back to WC Counter
+      await page.locator('nav a[href="/wc-counter"]').first().click();
+      await expect(page).toHaveURL('/wc-counter');
+      await page.waitForTimeout(500);
+
+      // Verify WC counter works again (re-hydrated)
+      const countDisplayAfter = page.locator('wc-counter .count-display');
+      const valueAfter = await countDisplayAfter.textContent();
+      const valueNum = parseInt(valueAfter || '0', 10);
+
+      // Click increment - must work after re-navigation
+      await page.locator('wc-counter button.inc').click();
+      await expect(countDisplayAfter).toHaveText(String(valueNum + 1));
     });
   });
 

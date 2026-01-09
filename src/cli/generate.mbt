@@ -1456,13 +1456,13 @@ fn generate_server_pkg_json(routes_pkg : String) -> String {
   buf.write_string("  \"is-main\": true,\n")
   buf.write_string("  \"import\": [\n")
   buf.write_string(
-    "    { \"path\": \"mizchi/luna/sol\", \"alias\": \"sol\" },\n",
+    "    { \"path\": \"mizchi/sol\", \"alias\": \"sol\" },\n",
   )
   buf.write_string(
-    "    { \"path\": \"mizchi/luna/sol/router\", \"alias\": \"router\" },\n",
+    "    { \"path\": \"mizchi/sol/router\", \"alias\": \"router\" },\n",
   )
   buf.write_string(
-    "    { \"path\": \"mizchi/luna/sol/action\", \"alias\": \"action\" },\n",
+    "    { \"path\": \"mizchi/sol/action\", \"alias\": \"action\" },\n",
   )
   buf.write_string(
     "    { \"path\": \"mizchi/js/core\", \"alias\": \"core\" },\n",

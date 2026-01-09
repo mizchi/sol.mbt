@@ -440,8 +440,9 @@ fn[FS : @env.FileSystem] run_server_with_fs(
     }
     Some(entry) => {
       println(@colorette.cyan("Running \{entry}..."))
-      // Set PORT environment variable before starting server
+      // Set environment variables before starting server
       set_env("PORT", port)
+      set_env("SOL_DEV", "1") // Enable dev mode cache control
       // Run the server with inherited stdio (blocking)
       try {
         let result = @child_process.spawnSync(

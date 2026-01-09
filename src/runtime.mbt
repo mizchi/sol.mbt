@@ -752,6 +752,8 @@ pub struct StaticFileConfig {
   local_dir : String
   /// File mappings: (url_filename, local_path)
   mappings : Array[(String, String)]
+  /// Cache-Control header value (default: "max-age=3600", use "no-cache, no-store" for dev)
+  cache_control : String
 }
 
 ///|
@@ -761,6 +763,18 @@ pub fn StaticFileConfig::default() -> StaticFileConfig {
     path_prefix: "/static",
     local_dir: "static",
     mappings: [("loader.js", "static/loader.js")],
+    cache_control: "max-age=3600",
+  }
+}
+
+///|
+/// Create static file config for development (no caching)
+pub fn StaticFileConfig::dev() -> StaticFileConfig {
+  {
+    path_prefix: "/static",
+    local_dir: "static",
+    mappings: [("loader.js", "static/loader.js")],
+    cache_control: "no-cache, no-store, must-revalidate",
   }
 }
 
@@ -881,6 +895,12 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
   let cfg = config.unwrap_or(StaticFileConfig::default())
   let prefix = cfg.path_prefix
   let mappings = cfg.mappings
+  // In dev mode, disable caching to avoid stale JS/CSS issues
+  let cache_ctl = if is_dev_mode() {
+    "no-cache, no-store, must-revalidate"
+  } else {
+    cfg.cache_control
+  }
   app.get(prefix + "/*", fn(c) {
     let path = get_request_path(c)
     let start_idx = prefix.length() + 1
@@ -899,12 +919,13 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
             } else {
               "text/plain"
             }
-            return static_response(content, content_type)
+            return static_response(content, content_type, cache_control=cache_ctl)
           }
           None =>
             return static_response(
               "// " + url_file + " not found",
               "application/javascript",
+              cache_control=cache_ctl,
             )
         }
       }
@@ -934,9 +955,9 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
         } else {
           "text/plain"
         }
-        static_response(c, content_type)
+        static_response(c, content_type, cache_control=cache_ctl)
       }
-      None => static_response("Not found: " + filename, "text/plain")
+      None => static_response("Not found: " + filename, "text/plain", cache_control=cache_ctl)
     }
   })
 }

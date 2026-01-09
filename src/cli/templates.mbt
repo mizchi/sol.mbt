@@ -144,7 +144,7 @@ pub fn template_server_run_moon_pkg_json(package_name : String) -> String {
     #|  "supported-targets": ["js"],
     #|  "is-main": true,
     #|  "import": [
-    #|    { "path": "mizchi/luna/sol", "alias": "sol" },
+    #|    { "path": "mizchi/sol", "alias": "sol" },
     #|    { "path": "mizchi/js/core", "alias": "core" },
     #|    { "path": "{{PACKAGE_NAME}}/server/pages/home", "alias": "page_home" },
     #|    { "path": "{{PACKAGE_NAME}}/server/pages/about", "alias": "page_about" }
@@ -162,7 +162,7 @@ pub fn template_page_with_island_moon_pkg_json(package_name : String) -> String 
     #|  "import": [
     #|    { "path": "mizchi/luna/core", "alias": "luna" },
     #|    { "path": "mizchi/luna/core/signal", "alias": "signal" },
-    #|    { "path": "mizchi/luna/sol", "alias": "sol" },
+    #|    { "path": "mizchi/sol", "alias": "sol" },
     #|    { "path": "{{PACKAGE_NAME}}/client/components", "alias": "counter" }
     #|  ]
     #|}
@@ -177,7 +177,7 @@ pub fn template_page_simple_moon_pkg_json() -> String {
     #|  "supported-targets": ["js"],
     #|  "import": [
     #|    { "path": "mizchi/luna/core", "alias": "luna" },
-    #|    { "path": "mizchi/luna/sol", "alias": "sol" }
+    #|    { "path": "mizchi/sol", "alias": "sol" }
     #|  ]
     #|}
   )
@@ -419,11 +419,11 @@ pub fn template_routes_moon_pkg_json(package_name : String) -> String {
     #|{
     #|  "supported-targets": ["js"],
     #|  "import": [
-    #|    { "path": "mizchi/luna/sol/routes", "alias": "routes" },
+    #|    { "path": "mizchi/sol/routes", "alias": "routes" },
     #|    { "path": "mizchi/luna/core", "alias": "luna" },
     #|    { "path": "mizchi/luna/core/signal", "alias": "signal" },
-    #|    { "path": "mizchi/luna/sol", "alias": "sol" },
-    #|    { "path": "mizchi/luna/sol/router", "alias": "router" },
+    #|    { "path": "mizchi/sol", "alias": "sol" },
+    #|    { "path": "mizchi/sol/router", "alias": "router" },
     #|    { "path": "mizchi/luna/luna/static_dom/element", "alias": "element" },
     #|    { "path": "mizchi/js/core", "alias": "core" },
     #|    { "path": "{{PACKAGE_NAME}}/layout", "alias": "layout" },
