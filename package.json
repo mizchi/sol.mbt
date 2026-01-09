@@ -1,7 +1,11 @@
 {
-  "name": "sol.mbt",
+  "name": "@luna_ui/sol",
   "private": true,
   "description": "MoonBit SSR/SSG Framework",
+  "type": "module",
+  "bin": {
+    "sol": "./bin/sol.js"
+  },
   "scripts": {
     "test": "moon test --target js",
     "test:e2e": "pnpm playwright test --config e2e/playwright.config.mts",
