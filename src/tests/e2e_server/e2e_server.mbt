@@ -59,7 +59,7 @@ async fn create_loader_app() -> @sol.App {
     let html = @sol.render_island_page(
       ["<div class=\"spacer\">Scroll down to trigger hydration</div>", island],
       title="Visible Trigger Test",
-      head="<style>.spacer { height: 150vh; background: linear-gradient(#eee, #ccc); } .lazy-component { padding: 20px; background: #f0f0f0; }</style>",
+      head="<style>.spacer { height: 2000px; background: linear-gradient(#eee, #ccc); } .lazy-component { padding: 20px; background: #f0f0f0; }</style>",
     )
     c.html(html)
   })

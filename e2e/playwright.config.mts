@@ -18,7 +18,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Fixed viewport for consistent behavior in CI
+        viewport: { width: 1280, height: 720 },
+      },
     },
   ],
   webServer: {
