@@ -41,6 +41,8 @@ function extractParams(c: Context): RouteParams {
     params,
     query,
     path: url.pathname,
+    get_param: (name: string) => params.find(([k]) => k === name)?.[1],
+    get_query: (name: string) => query.find(([k]) => k === name)?.[1],
   };
 }
 

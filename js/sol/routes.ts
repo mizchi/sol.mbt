@@ -17,6 +17,10 @@ export interface RouteParams {
   query: [string, string][];
   /** Full path */
   path: string;
+  /** Get a path parameter by name */
+  get_param?: (name: string) => string | undefined;
+  /** Get a query parameter by name */
+  get_query?: (name: string) => string | undefined;
 }
 
 export interface PageProps {

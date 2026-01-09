@@ -142,6 +142,11 @@ export function renderToString(node: VNode | VNode[]): string {
 
   const { tag, attrs, children } = node;
 
+  // Handle raw HTML nodes
+  if (tag === '__raw__') {
+    return String(attrs.html || '');
+  }
+
   // Build attributes string
   const attrStr = Object.entries(attrs)
     .filter(([_, v]) => v !== false && v !== null && v !== undefined)
