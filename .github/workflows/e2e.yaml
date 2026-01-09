@@ -35,9 +35,8 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: E2E tests (core)
         run: pnpm test:e2e
-      # sol_app e2e tests disabled - needs CLI path fix
-      # - name: E2E tests (sol_app)
-      #   working-directory: examples/sol_app
-      #   run: |
-      #     pnpm install
-      #     pnpm test:e2e
+      - name: E2E tests (sol_app)
+        working-directory: examples/sol_app
+        run: |
+          pnpm install
+          pnpm test:e2e
