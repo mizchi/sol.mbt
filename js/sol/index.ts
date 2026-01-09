@@ -128,7 +128,34 @@ export type { VNode, ElementNode } from './html';
 export {
   registerRoutes,
   createApp,
+  createWorkerApp,
   extractParams,
   isFragmentRequest,
   wrapInTemplate,
+  revalidateMiddleware,
 } from './server-runtime';
+export type {
+  ISRRouterConfig,
+  CloudflareEnv,
+  ExecutionContext,
+} from './server-runtime';
+
+// ISR Cache
+export {
+  ISRCacheManager,
+  MemoryCacheAdapter,
+  CloudflareKVAdapter,
+  CloudflareCacheAdapter,
+  createCacheAdapter,
+  getISRCache,
+  resetISRCache,
+} from './cache';
+export type {
+  CacheAdapter,
+  CacheEntry,
+  CacheMetadata,
+  ISRCacheOptions,
+  ISRResult,
+  ISRContext,
+  CloudflareKVNamespace,
+} from './cache';
