@@ -8,3 +8,4 @@ app/client/__gen__*
 package-lock.json
 wrangler.json
 zap-reports
+bench/results/*.json

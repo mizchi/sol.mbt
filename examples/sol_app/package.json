@@ -8,7 +8,12 @@
     "build": "node ../../target/js/release/build/cli/cli.js build",
     "serve": "node ../../target/js/release/build/cli/cli.js serve",
     "test": "playwright test",
-    "test:e2e": "playwright test tests/e2e.test.ts"
+    "test:e2e": "playwright test tests/e2e.test.ts",
+    "bench": "k6 run bench/all.js",
+    "bench:static": "k6 run bench/static-routes.js",
+    "bench:dynamic": "k6 run bench/dynamic-routes.js",
+    "bench:api": "k6 run bench/api-routes.js",
+    "bench:quick": "k6 run --vus 5 --duration 10s bench/all.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
