@@ -1,9 +1,13 @@
 {
-  "name": "example/astra-app",
+  "name": "example/sol-docs",
   "version": "0.1.0",
   "deps": {
-    "mizchi/luna": "0.4.0"
+    "mizchi/sol": {
+      "path": "../.."
+    },
+    "mizchi/luna": "0.4.1",
+    "mizchi/js": "0.10.7"
   },
-  "source": "docs",
+  "source": "app",
   "preferred-target": "js"
 }

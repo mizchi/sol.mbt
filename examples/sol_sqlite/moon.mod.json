@@ -2,10 +2,11 @@
   "name": "example/sol-sqlite",
   "version": "0.1.0",
   "deps": {
-    "mizchi/luna": {
+    "mizchi/sol": {
       "path": "../.."
     },
-    "mizchi/js": "0.10.0"
+    "mizchi/luna": "0.4.1",
+    "mizchi/js": "0.10.7"
   },
   "source": "app",
   "preferred-target": "js"
