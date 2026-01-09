@@ -15,6 +15,7 @@ fn show_dev_help() -> Unit {
     #|Options:
     #|  -p, --port <port>   Port to listen on (default: 3000)
     #|  -n, --no-watch      Disable file watching (watch is enabled by default)
+    #|  -f, --watch-framework  Watch sol framework source for hot reload
     #|  --clean             Clean target and .sol directories before build
     #|  -h, --help          Show help
   println(help)
@@ -37,6 +38,7 @@ async fn[FS : @env.FileSystem] run_dev_command_with_fs(
     options=[
       @util.String(key="port", short="p", multiple=false, default=Some("3000")),
       @util.Boolean(key="no-watch", short="n"),
+      @util.Boolean(key="watch-framework", short="f"),
       @util.Boolean(key="clean", short="c"),
       @util.Boolean(key="help", short="h"),
     ],
@@ -60,6 +62,11 @@ async fn[FS : @env.FileSystem] run_dev_command_with_fs(
   }
   let clean : Bool = if result.values.contains("clean") {
     result.values["clean"].cast()
+  } else {
+    false
+  }
+  let watch_framework : Bool = if result.values.contains("watch-framework") {
+    result.values["watch-framework"].cast()
   } else {
     false
   }
@@ -124,7 +131,7 @@ async fn[FS : @env.FileSystem] run_dev_command_with_fs(
   }
   // Run server (watch mode or blocking mode)
   if watch {
-    run_dev_watch_mode(cwd, port)
+    run_dev_watch_mode(cwd, port, watch_framework)
   } else {
     run_server(cwd, port, "dev")
   }
@@ -237,7 +244,11 @@ let hmr_port : Int = 24678
 
 ///|
 /// Run dev server with watch mode
-async fn run_dev_watch_mode(cwd : String, port : String) -> Unit {
+async fn run_dev_watch_mode(
+  cwd : String,
+  port : String,
+  watch_framework : Bool,
+) -> Unit {
   let fs = @fs_adapter.NodeFsAdapter::new()
   // Find server entry point
   let entry = find_server_entry_with_fs(fs, cwd, "dev")
@@ -368,6 +379,67 @@ async fn run_dev_watch_mode(cwd : String, port : String) -> Unit {
 
         }
       }
+      // Watch framework source if --watch-framework is enabled
+      if watch_framework {
+        match find_framework_root(cwd) {
+          Some(framework_root) => {
+            let framework_src = @path.join2(framework_root, "src")
+            println(
+              @colorette.cyan("Also watching framework source: \{framework_src}"),
+            )
+            let _fw_watcher = @fs.watch(
+              framework_src,
+              recursive=true,
+              listener=fn(event : String, filename : String) {
+                let is_generated = filename.contains("__gen__")
+                if filename.ends_with(".mbt") &&
+                  event == "change" &&
+                  not(is_generated) {
+                  let now = @cli_common.date_now()
+                  if now - last_rebuild.val > debounce_ms {
+                    last_rebuild.val = now
+                    println(
+                      @colorette.yellow(
+                        "\n[watch] Framework changed: \{filename}, rebuilding...",
+                      ),
+                    )
+                    stop_server()
+                    // First rebuild framework
+                    if rebuild_framework(framework_root) {
+                      // Then rebuild app
+                      if run_incremental_build_dev(cwd) {
+                        restart_server()
+                        set_timeout(
+                          fn() { hmr_server.notify_full_reload() },
+                          500,
+                        )
+                      } else {
+                        hmr_server.notify_error(
+                          "App build failed after framework rebuild",
+                        )
+                        println(
+                          @colorette.red("[watch] App build failed. Waiting for changes..."),
+                        )
+                      }
+                    } else {
+                      hmr_server.notify_error("Framework rebuild failed")
+                      println(
+                        @colorette.red("[watch] Framework rebuild failed. Waiting for changes..."),
+                      )
+                    }
+                  }
+                }
+              },
+            )
+          }
+          None =>
+            println(
+              @colorette.yellow(
+                "Warning: --watch-framework specified but framework root not found",
+              ),
+            )
+        }
+      }
       // Keep process alive
       @cli_common.keep_alive()
     }
@@ -459,6 +531,53 @@ fn[FS : @env.FileSystem] run_server_with_fs(
           @process.exit(1)
         }
       }
+    }
+  }
+}
+
+///|
+/// Find sol framework root by walking up directories
+/// Looks for src/cli/dev.mbt as a marker file
+fn find_framework_root(start_dir : String) -> String? {
+  let fs = @fs_adapter.NodeFsAdapter::new()
+  let mut current = start_dir
+  for _ in 0..<10 {
+    // Max 10 levels up
+    let marker = @path.join2(current, "src/cli/dev.mbt")
+    if fs.exists_sync(marker) {
+      return Some(current)
+    }
+    let parent = @path.dirname(current)
+    if parent == current {
+      break
+    } // Reached root
+    current = parent
+  }
+  None
+}
+
+///|
+/// Rebuild sol framework at the given root
+fn rebuild_framework(framework_root : String) -> Bool {
+  println(@colorette.cyan("[watch] Rebuilding sol framework..."))
+  try {
+    let result = @child_process.spawnSync(
+      "moon",
+      args=["build", "--target", "js"],
+      cwd=framework_root,
+      stdio="inherit",
+    )
+    if result.status() == Some(0) {
+      println(@colorette.green("[watch] Framework rebuild complete"))
+      true
+    } else {
+      println(@colorette.red("[watch] Framework rebuild failed"))
+      false
+    }
+  } catch {
+    e => {
+      println(@colorette.red("[watch] Framework rebuild error: \{e}"))
+      false
     }
   }
 }
