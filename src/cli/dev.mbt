@@ -140,13 +140,13 @@ async fn[FS : @env.FileSystem] run_dev_command_with_fs(
 ///|
 /// Run initial build steps for dev mode (includes sol generate)
 /// Returns true on success, false on failure
-fn run_initial_build_dev(cwd : String) -> Bool {
+async fn run_initial_build_dev(cwd : String) -> Bool {
   let fs = @fs_adapter.NodeFsAdapter::new()
   run_initial_build_dev_with_fs(fs, cwd)
 }
 
 ///|
-fn[FS : @env.FileSystem] run_initial_build_dev_with_fs(
+async fn[FS : @env.FileSystem] run_initial_build_dev_with_fs(
   fs : FS,
   cwd : String,
 ) -> Bool {
@@ -160,9 +160,10 @@ fn[FS : @env.FileSystem] run_initial_build_dev_with_fs(
   if fs.exists_sync(prod_dir) {
     @cli_common.rm_rf_sync(fs, prod_dir)
   }
-  // Run generate if sol.config.json exists (only at startup)
-  let sol_config_path = @path.join2(cwd, "sol.config.json")
-  if fs.exists_sync(sol_config_path) {
+  // Run generate if sol.config.json or sol.config.ts exists (only at startup)
+  let sol_config_json_path = @path.join2(cwd, "sol.config.json")
+  let sol_config_ts_path = @path.join2(cwd, "sol.config.ts")
+  if fs.exists_sync(sol_config_json_path) || fs.exists_sync(sol_config_ts_path) {
     println(@colorette.gray("Generating .sol directory..."))
     run_generate_command(["--mode", "dev"])
     println(@colorette.green("✓ Generate complete"))
