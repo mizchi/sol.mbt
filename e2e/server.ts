@@ -15,9 +15,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
 
 // Load static assets - Luna loader
-// First try luna.mbt sibling repo, then mooncakes
+// Try multiple locations: local src, luna.mbt sibling repo, mooncakes
 function findLoaderPath(): string {
   const paths = [
+    join(rootDir, "src", "ssg", "assets", "scripts", "loader.js"),
     join(rootDir, "..", "luna.mbt", "js", "loader", "dist", "loader.iife.js"),
     join(rootDir, ".mooncakes", "mizchi", "luna", "js", "loader", "dist", "loader.iife.js"),
   ];
