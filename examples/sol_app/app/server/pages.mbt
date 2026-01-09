@@ -40,6 +40,22 @@ async fn wc_multiple(_props : @router.PageProps) -> @server_dom.ServerNode {
       state="{\"initial_count\":10}",
       trigger=@luna.Load,
     ),
+    @server_dom.wc_island(
+      "wc-counter",
+      "/static/wc_counter.js",
+      [
+        div(class="counter", [
+          span(class="count-display", [text("100")]),
+          div(class="buttons", [
+            button(class="dec", attrs=[("data-on-click", @luna.attr_static("decrement"))], [text("-")]),
+            button(class="inc", attrs=[("data-on-click", @luna.attr_static("increment"))], [text("+")]),
+          ]),
+        ]),
+      ],
+      styles=@client.wc_counter_css,
+      state="{\"initial_count\":100}",
+      trigger=@luna.Load,
+    ),
   ]
   @server_dom.ServerNode::sync(@luna.fragment(content))
 }

@@ -8,8 +8,12 @@ test.describe('Counter Island Hydration', () => {
     const counter = page.locator('.counter');
     await expect(counter).toBeVisible();
 
+    // Initial value is server-generated random number, just verify it exists
     const countDisplay = page.locator('.count-display');
-    await expect(countDisplay).toHaveText('0');
+    await expect(countDisplay).toBeVisible();
+    const initialText = await countDisplay.textContent();
+    expect(initialText).not.toBeNull();
+    expect(parseInt(initialText || '0', 10)).toBeGreaterThanOrEqual(0);
   });
 
   test('should hydrate and increment counter on click', async ({ page }) => {
@@ -19,14 +23,15 @@ test.describe('Counter Island Hydration', () => {
     await page.waitForTimeout(500);
 
     const countDisplay = page.locator('.count-display');
-    await expect(countDisplay).toHaveText('0');
+    const initialText = await countDisplay.textContent();
+    const initialValue = parseInt(initialText || '0', 10);
 
     // Click increment button
     const incButton = page.locator('button.inc');
     await incButton.click();
 
-    // Counter should increase
-    await expect(countDisplay).toHaveText('1');
+    // Counter should increase by 1 from initial value
+    await expect(countDisplay).toHaveText(String(initialValue + 1));
   });
 
   test('should decrement counter on click', async ({ page }) => {
@@ -36,16 +41,18 @@ test.describe('Counter Island Hydration', () => {
     await page.waitForTimeout(500);
 
     const countDisplay = page.locator('.count-display');
+    const initialText = await countDisplay.textContent();
+    const initialValue = parseInt(initialText || '0', 10);
 
-    // Click increment first to have a positive value
+    // Click increment first
     const incButton = page.locator('button.inc');
     await incButton.click();
-    await expect(countDisplay).toHaveText('1');
+    await expect(countDisplay).toHaveText(String(initialValue + 1));
 
-    // Click decrement
+    // Click decrement - should go back to initial value
     const decButton = page.locator('button.dec');
     await decButton.click();
-    await expect(countDisplay).toHaveText('0');
+    await expect(countDisplay).toHaveText(String(initialValue));
   });
 
   test('should handle multiple clicks', async ({ page }) => {
@@ -55,6 +62,9 @@ test.describe('Counter Island Hydration', () => {
     await page.waitForTimeout(500);
 
     const countDisplay = page.locator('.count-display');
+    const initialText = await countDisplay.textContent();
+    const initialValue = parseInt(initialText || '0', 10);
+
     const incButton = page.locator('button.inc');
 
     // Click multiple times
@@ -62,6 +72,7 @@ test.describe('Counter Island Hydration', () => {
     await incButton.click();
     await incButton.click();
 
-    await expect(countDisplay).toHaveText('3');
+    // Counter should increase by 3 from initial value
+    await expect(countDisplay).toHaveText(String(initialValue + 3));
   });
 });
