@@ -8,6 +8,26 @@ import {
 import { renderToString, raw } from '@luna_ui/luna/html';
 
 // ============================================================================
+// Island Helper
+// ============================================================================
+
+interface IslandProps {
+  name: string;
+  state: Record<string, unknown>;
+  children?: unknown;
+}
+
+function Island({ name, state, children }: IslandProps) {
+  const stateJson = JSON.stringify(state);
+  // Children are already VNodes from JSX, pass them directly
+  return (
+    <div data-island={name} data-state={stateJson}>
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
 // Layouts
 // ============================================================================
 
@@ -44,13 +64,27 @@ async function HomePage(_props: PageProps): Promise<string> {
     <div class="home">
       <h1>Welcome to Sol TSX</h1>
       <p>This is a fully TypeScript-based Sol application with JSX syntax.</p>
+
+      <section class="demo">
+        <h2>Interactive Counter (Island)</h2>
+        <Island name="counter" state={{ initialCount: 0 }}>
+          <div class="counter">
+            <span class="count-display">0</span>
+            <div class="buttons">
+              <button class="dec">-</button>
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </Island>
+      </section>
+
       <div class="features">
         <h2>Features</h2>
         <ul>
           <li>Pure TypeScript with JSX</li>
           <li>Type-safe components</li>
           <li>Hot reload with tsx</li>
-          <li>Same SSR as MoonBit version</li>
+          <li>Island Architecture with hydration</li>
         </ul>
       </div>
     </div>
@@ -207,10 +241,31 @@ export function routes(): SolRoute[] {
   ];
 }
 
+const CSS = `
+body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
+.nav ul { display: flex; gap: 20px; list-style: none; padding: 0; }
+.footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
+.demo { margin: 2rem 0; padding: 1.5rem; background: #f5f5f5; border-radius: 8px; }
+.counter { display: flex; align-items: center; gap: 1rem; }
+.count-display { font-size: 2rem; font-weight: bold; min-width: 3rem; text-align: center; }
+.buttons { display: flex; gap: 0.5rem; }
+.buttons button {
+  font-size: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+}
+.buttons button:hover { background: #0056b3; }
+`;
+
 export function config(): RouterConfig {
   return {
     rootTemplate: DEFAULT_ROOT_TEMPLATE,
-    defaultHead: '<style>body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; } .nav ul { display: flex; gap: 20px; list-style: none; padding: 0; } .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }</style>',
+    defaultHead: `<style>${CSS}</style><script type="module" src="/client.js"></script>`,
     titlePrefix: 'Sol TSX | ',
   };
 }

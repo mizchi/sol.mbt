@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npx tsx server.ts",
-    "build": "echo 'TypeScript mode - no build needed'",
+    "build:client": "node build-client.mjs",
+    "dev": "npm run build:client && npx tsx server.ts",
+    "build": "npm run build:client",
     "serve": "npx tsx server.ts"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
     "hono": "^4.0.0"
   },
   "devDependencies": {
+    "esbuild": "^0.21.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }

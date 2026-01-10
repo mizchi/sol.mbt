@@ -159,3 +159,23 @@ export type {
   ISRContext,
   CloudflareKVNamespace,
 } from './cache';
+
+// Client-side Signal API
+export {
+  createSignal,
+  createEffect,
+  createMemo,
+  batch,
+} from './signal';
+export type {
+  Accessor,
+  Setter,
+  Signal,
+} from './signal';
+
+// Client-side Render
+export { render } from './render';
+
+// Hydration
+export { createHydrator } from './hydration';
+export type { HydrateFn, CleanupFn } from './hydration';
