@@ -4,8 +4,8 @@ import {
   type SolRoute,
   type RouterConfig,
   DEFAULT_ROOT_TEMPLATE,
-} from '@sol/core/routes';
-import { renderToString, raw } from '@sol/core/html';
+} from '@luna_ui/luna/routes';
+import { renderToString, raw } from '@luna_ui/luna/html';
 
 // ============================================================================
 // Layouts

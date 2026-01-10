@@ -7,8 +7,9 @@
     "strict": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@sol/core",
+    "jsxImportSource": "@luna_ui/luna",
     "paths": {
+      "@luna_ui/luna/*": ["../../js/sol/*"],
       "@sol/core/*": ["../../js/sol/*"]
     }
   },
