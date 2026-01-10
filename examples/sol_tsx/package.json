@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
+    "@luna_ui/luna": "workspace:*",
     "@sol/core": "workspace:*",
     "hono": "^4.0.0"
   },

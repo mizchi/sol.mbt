@@ -1,0 +1,17 @@
+{
+  "name": "@luna_ui/luna",
+  "version": "0.0.1",
+  "description": "Luna UI SSR JSX Runtime (alias for @sol/core)",
+  "type": "module",
+  "main": "../sol/index.ts",
+  "exports": {
+    ".": "../sol/index.ts",
+    "./jsx-runtime": "../sol/jsx-runtime.ts",
+    "./jsx-dev-runtime": "../sol/jsx-dev-runtime.ts",
+    "./config": "../sol/config.ts",
+    "./routes": "../sol/routes.ts",
+    "./html": "../sol/html.ts",
+    "./server-runtime": "../sol/server-runtime.ts"
+  },
+  "types": "../sol/index.ts"
+}
