@@ -166,7 +166,7 @@ function addCacheHeaders(
 function compileRoute(
   route: SolRoute,
   config: ISRRouterConfig,
-  cacheManager: ISRCacheManager | null,
+  getCacheManager: (c: Context) => ISRCacheManager | null,
   layouts: LayoutRoute[] = [],
   middlewares: Middleware[] = []
 ): CompiledRoute[] {
@@ -223,13 +223,15 @@ function compileRoute(
             }
 
             // ISR handling (only for non-middleware routes)
+            const cacheManager = getCacheManager(c);
             if (shouldCache && cacheManager && !props.is_fragment) {
               const cacheKey = generateCacheKey(c, pageRoute);
 
               // Try to get execution context for background revalidation (Cloudflare Workers only)
               let waitUntil: ((p: Promise<unknown>) => void) | undefined;
               try {
-                const executionCtx = (c as unknown as { executionCtx?: ExecutionContext }).executionCtx;
+                // Hono provides executionCtx as a getter in Cloudflare Workers
+                const executionCtx = c.executionCtx as ExecutionContext | undefined;
                 waitUntil = executionCtx?.waitUntil?.bind(executionCtx);
               } catch {
                 // executionCtx not available in Node.js - regeneration will be synchronous
@@ -264,7 +266,7 @@ function compileRoute(
       // Add this layout to the stack and compile children
       for (const child of layoutRoute.children) {
         results.push(
-          ...compileRoute(child, config, cacheManager, [...layouts, layoutRoute], middlewares)
+          ...compileRoute(child, config, getCacheManager, [...layouts, layoutRoute], middlewares)
         );
       }
       break;
@@ -321,7 +323,7 @@ function compileRoute(
       // Add middlewares to the stack and compile children
       for (const child of mwRoute.children) {
         results.push(
-          ...compileRoute(child, config, cacheManager, layouts, [
+          ...compileRoute(child, config, getCacheManager, layouts, [
             ...middlewares,
             ...mwRoute.middleware,
           ])
@@ -340,11 +342,11 @@ function compileRoute(
 function compileRoutes(
   routes: SolRoute[],
   config: ISRRouterConfig,
-  cacheManager: ISRCacheManager | null
+  getCacheManager: (c: Context) => ISRCacheManager | null
 ): CompiledRoute[] {
   const results: CompiledRoute[] = [];
   for (const route of routes) {
-    results.push(...compileRoute(route, config, cacheManager));
+    results.push(...compileRoute(route, config, getCacheManager));
   }
   return results;
 }
@@ -386,22 +388,24 @@ function createCacheAdapter(config: ISRRouterConfig, env?: CloudflareEnv): Cache
  * @param app - Hono application instance
  * @param routes - Array of SolRoute definitions
  * @param config - Router configuration including ISR options
- * @param env - Optional Cloudflare environment bindings
  */
 export function registerRoutes<T extends Hono>(
   app: T,
   routes: SolRoute[],
-  config: ISRRouterConfig = {},
-  env?: CloudflareEnv
+  config: ISRRouterConfig = {}
 ): T {
-  // Create cache manager if ISR is enabled
-  let cacheManager: ISRCacheManager | null = null;
-  if (config.enableISR) {
-    const adapter = createCacheAdapter(config, env);
-    cacheManager = new ISRCacheManager(adapter);
-  }
+  // For Cloudflare Workers, we need to create cache manager per-request
+  // because env bindings are only available at request time
+  const getCacheManager = (c: Context): ISRCacheManager | null => {
+    if (!config.enableISR) return null;
 
-  const compiled = compileRoutes(routes, config, cacheManager);
+    // Try to get KV binding from Hono context (Cloudflare Workers)
+    const env = c.env as CloudflareEnv | undefined;
+    const adapter = createCacheAdapter(config, env);
+    return new ISRCacheManager(adapter);
+  };
+
+  const compiled = compileRoutes(routes, config, getCacheManager);
 
   for (const route of compiled) {
     switch (route.method) {
@@ -441,14 +445,8 @@ export function createWorkerApp(
     const routes = routesFn();
     const config = configFn();
 
-    // Inject execution context for waitUntil
-    app.use('*', async (c, next) => {
-      (c as unknown as { executionCtx: ExecutionContext }).executionCtx = ctx;
-      (c as unknown as { env: CloudflareEnv }).env = env;
-      await next();
-    });
-
-    registerRoutes(app, routes, config, env);
+    // Hono automatically provides c.env and c.executionCtx in Cloudflare Workers
+    registerRoutes(app, routes, config);
 
     return app.fetch(request, env, ctx);
   };

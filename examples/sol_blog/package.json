@@ -4,7 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsx --no-cache server.ts",
-    "serve": "npx tsx server.ts"
+    "serve": "npx tsx server.ts",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "kv:create": "wrangler kv namespace create SOL_CACHE",
+    "kv:list": "wrangler kv namespace list"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
@@ -13,6 +17,7 @@
   },
   "devDependencies": {
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
   }
 }
