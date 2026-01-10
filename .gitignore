@@ -31,3 +31,4 @@ website/public/demo/
 tmp.sol-cache/
 tmp/
 playwright-report/
+_build
