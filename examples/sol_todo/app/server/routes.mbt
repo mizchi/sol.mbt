@@ -156,10 +156,23 @@ async fn api_get_todos(_props : @router.PageProps) -> @core.Any {
 }
 
 ///|
+/// Extract string field from JSON object
+fn get_json_string(json : Json?, field : String) -> String {
+  match json {
+    Some(Object(obj)) =>
+      match obj.get(field) {
+        Some(String(s)) => s
+        _ => ""
+      }
+    _ => ""
+  }
+}
+
+///|
 /// POST /api/todos - Add a new todo
 async fn api_add_todo(props : @router.PageProps) -> @core.Any {
-  let body : @core.Any = props.get_json()
-  let text = get_string_field(body, "text")
+  let json = props.ctx.body_json()
+  let text = get_json_string(json, "text")
   if text == "" {
     return @sol.json_obj([
       ("error", @core.any("text is required")),
