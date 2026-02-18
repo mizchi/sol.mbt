@@ -27,6 +27,15 @@ just sol dev
 - **Server Actions**: Server-side functions with CSRF protection
 - **Nested Layouts**: Support for hierarchical layout structures
 
+## Mars-first Responsibilities
+
+Sol is organized around Mars as the server foundation, with these primary responsibilities:
+
+- **File-based routing assignment**: Route mapping from files/config to handlers
+- **SSR orchestration**: HTML/fragment rendering and response composition
+- **Asset loading**: Static assets and hydration loader wiring
+- **Wasm entrypoint orchestration (optional)**: `.mbtx` / `.wasm` mount manifest generation
+
 ## Quick Start
 
 ```bash
@@ -52,6 +61,15 @@ export default {
   output: "app/__gen__",
   runtime: "node",
   client_auto_exports: false,
+  wasmEntryPoints: [
+    {
+      id: "users_show",
+      route: "/users/:id",
+      source: "app/entries/users_show.mbtx",
+      runtime: "wagi", // "wagi" | "wasi-cli" | "component"
+      method: ["GET"],
+    },
+  ],
 }
 ```
 
@@ -124,6 +142,7 @@ sol build --target wasm   # WASM target
 sol build --skip-bundle   # Skip rolldown
 sol build --skip-generate # Skip generation
 sol build --clean         # Clear cache and build
+sol build --wasm-entrypoints --runtime wagi --emit-spin-fragment
 ```
 
 ### `sol serve`
@@ -217,6 +236,19 @@ pub fn config() -> @router.RouterConfig {
 | `Post` | POST API route (JSON response) |
 | `Layout` | Nested layout group |
 | `WithMiddleware` | Route group with middleware applied |
+
+### Router API Selection
+
+- `@router.register_routes` / `@router.register_server_routes`
+  - 入力: `@luna/core/routes.Routes`
+  - 目的: file based routing の割り当てを薄く行う
+  - `Layout` は path prefix のグルーピングとして扱う（layout 関数合成はしない）
+- `@router.register_sol_routes`
+  - 入力: `@router.SolRoutes`
+  - 目的: `ServerNode` ベースの SSR と layout 合成を含めて扱う
+  - `SolRoutes::Layout` を実際に適用する
+
+詳細: `docs/router-layout-support.md`
 
 ## Nested Layouts
 

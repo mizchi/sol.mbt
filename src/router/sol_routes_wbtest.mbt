@@ -77,6 +77,20 @@ test "compile sol api routes" {
 }
 
 ///|
+test "is_api_route_kind - returns true for API kinds" {
+  assert_true(is_api_route_kind(SolRouteKind::GetApi))
+  assert_true(is_api_route_kind(SolRouteKind::PostApi))
+  assert_true(is_api_route_kind(SolRouteKind::PutApi))
+  assert_true(is_api_route_kind(SolRouteKind::DeleteApi))
+  assert_true(is_api_route_kind(SolRouteKind::PatchApi))
+}
+
+///|
+test "is_api_route_kind - returns false for page kind" {
+  assert_false(is_api_route_kind(SolRouteKind::Page))
+}
+
+///|
 test "extract param names from sol routes" {
   async fn user_handler(_props : PageProps) -> @server_dom.ServerNode {
     @server_dom.ServerNode::sync(@luna.text("User"))

@@ -545,6 +545,64 @@ async fn render_page_to_html(
 }
 
 ///|
+async fn handle_compiled_api_route(c : Ctx, route : CompiledSolRoute) -> Unit {
+  // Run middleware chain first
+  let halted = run_middlewares(c, route.middlewares)
+  if halted {
+    return
+  }
+  let mut params = extract_route_params(
+    c,
+    is_fragment=false,
+    param_names=route.param_names,
+  )
+  params = add_catch_all_param(params, route.catch_all)
+  let props = PageProps::from_ctx_with_params(c, params)
+  match route.api_handler {
+    Some(ApiHandler(handler)) => {
+      let json : @js.Any = handler(props) catch {
+        e => {
+          @mars_response.send_json_error(c, e.to_string(), status=500)
+          return
+        }
+      }
+      @mars_response.send_json_any(c, json)
+    }
+    None => @mars_response.send_json_error(c, "No handler", status=404)
+  }
+}
+
+///|
+fn is_api_route_kind(kind : SolRouteKind) -> Bool {
+  match kind {
+    SolRouteKind::GetApi => true
+    SolRouteKind::PostApi => true
+    SolRouteKind::PutApi => true
+    SolRouteKind::DeleteApi => true
+    SolRouteKind::PatchApi => true
+    SolRouteKind::Page => false
+  }
+}
+
+///|
+fn register_compiled_api_route(
+  app : App,
+  kind : SolRouteKind,
+  hono_pattern : String,
+  route : CompiledSolRoute,
+) -> Unit {
+  let handler = async fn(c) { handle_compiled_api_route(c, route) }
+  match kind {
+    SolRouteKind::GetApi => app.get(hono_pattern, handler)
+    SolRouteKind::PostApi => app.post(hono_pattern, handler)
+    SolRouteKind::PutApi => app.put(hono_pattern, handler)
+    SolRouteKind::DeleteApi => app.delete(hono_pattern, handler)
+    SolRouteKind::PatchApi => app.patch(hono_pattern, handler)
+    SolRouteKind::Page => ()
+  }
+}
+
+///|
 fn register_compiled_sol_routes(
   app : App,
   routes : Array[CompiledSolRoute],
@@ -562,7 +620,11 @@ fn register_compiled_sol_routes(
             return
           }
           let is_fragment = has_fragment_header(c)
-          let mut params = extract_route_params(c, is_fragment~)
+          let mut params = extract_route_params(
+            c,
+            is_fragment~,
+            param_names=route.param_names,
+          )
           // Add catch-all parameter if present
           params = add_catch_all_param(params, route.catch_all)
           let props = PageProps::from_ctx_with_params(c, params)
@@ -676,121 +738,10 @@ fn register_compiled_sol_routes(
             None => c.text("No handler for route")
           }
         })
-      SolRouteKind::GetApi =>
-        app.get(hono_pattern, async fn(c) {
-          // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
-          if halted {
-            return
-          }
-          let mut params = extract_route_params(c)
-          params = add_catch_all_param(params, route.catch_all)
-          let props = PageProps::from_ctx_with_params(c, params)
-          match route.api_handler {
-            Some(ApiHandler(handler)) => {
-              let json : @js.Any = handler(props) catch {
-                e => {
-                  ffi_send_json_error(c, e.to_string(), 500)
-                  return
-                }
-              }
-              ffi_send_json_any(c, json)
-            }
-            None => ffi_send_json_error(c, "No handler", 404)
-          }
-        })
-      SolRouteKind::PostApi =>
-        app.post(hono_pattern, async fn(c) {
-          // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
-          if halted {
-            return
-          }
-          let mut params = extract_route_params(c)
-          params = add_catch_all_param(params, route.catch_all)
-          let props = PageProps::from_ctx_with_params(c, params)
-          match route.api_handler {
-            Some(ApiHandler(handler)) => {
-              let json : @js.Any = handler(props) catch {
-                e => {
-                  ffi_send_json_error(c, e.to_string(), 500)
-                  return
-                }
-              }
-              ffi_send_json_any(c, json)
-            }
-            None => ffi_send_json_error(c, "No handler", 404)
-          }
-        })
-      SolRouteKind::PutApi =>
-        app.put(hono_pattern, async fn(c) {
-          // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
-          if halted {
-            return
-          }
-          let mut params = extract_route_params(c)
-          params = add_catch_all_param(params, route.catch_all)
-          let props = PageProps::from_ctx_with_params(c, params)
-          match route.api_handler {
-            Some(ApiHandler(handler)) => {
-              let json : @js.Any = handler(props) catch {
-                e => {
-                  ffi_send_json_error(c, e.to_string(), 500)
-                  return
-                }
-              }
-              ffi_send_json_any(c, json)
-            }
-            None => ffi_send_json_error(c, "No handler", 404)
-          }
-        })
-      SolRouteKind::DeleteApi =>
-        app.delete(hono_pattern, async fn(c) {
-          // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
-          if halted {
-            return
-          }
-          let mut params = extract_route_params(c)
-          params = add_catch_all_param(params, route.catch_all)
-          let props = PageProps::from_ctx_with_params(c, params)
-          match route.api_handler {
-            Some(ApiHandler(handler)) => {
-              let json : @js.Any = handler(props) catch {
-                e => {
-                  ffi_send_json_error(c, e.to_string(), 500)
-                  return
-                }
-              }
-              ffi_send_json_any(c, json)
-            }
-            None => ffi_send_json_error(c, "No handler", 404)
-          }
-        })
-      SolRouteKind::PatchApi =>
-        app.patch(hono_pattern, async fn(c) {
-          // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
-          if halted {
-            return
-          }
-          let mut params = extract_route_params(c)
-          params = add_catch_all_param(params, route.catch_all)
-          let props = PageProps::from_ctx_with_params(c, params)
-          match route.api_handler {
-            Some(ApiHandler(handler)) => {
-              let json : @js.Any = handler(props) catch {
-                e => {
-                  ffi_send_json_error(c, e.to_string(), 500)
-                  return
-                }
-              }
-              ffi_send_json_any(c, json)
-            }
-            None => ffi_send_json_error(c, "No handler", 404)
-          }
-        })
+      kind =>
+        if is_api_route_kind(kind) {
+          register_compiled_api_route(app, kind, hono_pattern, route)
+        }
     }
   }
 }

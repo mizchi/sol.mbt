@@ -218,6 +218,19 @@ pub fn config() -> @router.RouterConfig {
 | `Layout` | Nested layout group |
 | `WithMiddleware` | Route group with middleware applied |
 
+### Router API Selection
+
+- `@router.register_routes` / `@router.register_server_routes`
+  - 入力: `@luna/core/routes.Routes`
+  - 目的: file based routing の割り当てを薄く行う
+  - `Layout` は path prefix のグルーピングとして扱う（layout 関数合成はしない）
+- `@router.register_sol_routes`
+  - 入力: `@router.SolRoutes`
+  - 目的: `ServerNode` ベースの SSR と layout 合成を含めて扱う
+  - `SolRoutes::Layout` を実際に適用する
+
+詳細: `docs/router-layout-support.md`
+
 ## Nested Layouts
 
 Support for hierarchical layout structures:

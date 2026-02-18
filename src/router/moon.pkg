@@ -13,6 +13,7 @@ import {
   "mizchi/js/web/http" @http,
   "mizchi/js/web/url" @url,
   "mizchi/sol/internal/utils" @utils,
+  "mizchi/sol/internal/mars_response" @mars_response,
 }
 
 warnings = "-24-67-29"
