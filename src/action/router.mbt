@@ -108,11 +108,7 @@ fn action_result_to_response(c : Ctx, result : ActionResult) -> Unit {
   // Always set security header for action responses
   c.set_header("X-Content-Type-Options", "nosniff")
   match result {
-    Success(data) => {
-      // Use FFI to send @js.Any as JSON response
-      c.set_header("Content-Type", "application/json")
-      ffi_send_json_response(c, data)
-    }
+    Success(data) => @mars_response.send_json_any(c, data)
     Redirect(url) => {
       // Return JSON with redirect instruction (for JavaScript clients)
       let obj : Map[String, Json] = {}
@@ -123,33 +119,13 @@ fn action_result_to_response(c : Ctx, result : ActionResult) -> Unit {
       // Return actual HTTP redirect (302 with Location header)
       // For non-JavaScript form submissions (progressive enhancement)
       c.redirect(url)
-    ClientError(status, message) => {
-      c.set_header("Content-Type", "application/json")
-      c.set_status(status)
-      let obj : Map[String, Json] = {}
-      obj["error"] = Json::string(message)
-      c.json(Json::object(obj))
-    }
+    ClientError(status, message) =>
+      @mars_response.send_json_error(c, message, status~)
     ServerError(message) => {
       // Log the actual error (implementation depends on logging setup)
       let _ = message
       // Don't expose internal error details in production
-      c.set_header("Content-Type", "application/json")
-      c.set_status(500)
-      let obj : Map[String, Json] = {}
-      obj["error"] = Json::string("Internal Server Error")
-      c.json(Json::object(obj))
+      @mars_response.send_json_error(c, "Internal Server Error", status=500)
     }
   }
 }
-
-///|
-/// Send @js.Any as JSON response via FFI
-extern "js" fn ffi_send_json_response(c : Ctx, data : @js.Any) -> Unit =
-  #| (c, data) => {
-  #|   const body = JSON.stringify(data);
-  #|   c.platform.response_resolve(new Response(body, {
-  #|     status: 200,
-  #|     headers: { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' }
-  #|   }));
-  #| }

@@ -775,3 +775,252 @@ test "parse_sol_config: staticDirs with ogp" {
   assert_eq(ogp.image, Some("/og-image.png"))
   assert_eq(ogp.twitter_handle, Some("@example"))
 }
+
+// =============================================================================
+// Wasm Entrypoints (mbtx + wasip2/wagi) Tests
+// =============================================================================
+
+///|
+test "parse_sol_config: with wasmEntryPoints" {
+  let json =
+    #|{
+    #|  "islands": [],
+    #|  "routes": "app/server",
+    #|  "wasmEntryPoints": [
+    #|    {
+    #|      "id": "users_show",
+    #|      "route": "/users/:id",
+    #|      "source": "app/entries/users_show.mbtx",
+    #|      "runtime": "wagi",
+    #|      "method": ["GET", "POST"]
+    #|    }
+    #|  ]
+    #|}
+  let config = parse_sol_config(json)
+  assert_true(config.is_some())
+  let c = config.unwrap()
+  assert_eq(c.wasm_entrypoints.length(), 1)
+  let ep = c.wasm_entrypoints[0]
+  assert_eq(ep.id, "users_show")
+  assert_eq(ep.route, "/users/:id")
+  assert_eq(ep.source, "app/entries/users_show.mbtx")
+  assert_eq(ep.runtime, parse_wasm_entrypoint_runtime("wagi"))
+  assert_eq(ep.methods.length(), 2)
+  assert_eq(ep.methods[0], "GET")
+  assert_eq(ep.methods[1], "POST")
+}
+
+///|
+test "parse_sol_config: wasmEntryPoints defaults" {
+  let json =
+    #|{
+    #|  "islands": [],
+    #|  "routes": "app/server",
+    #|  "wasmEntryPoints": [
+    #|    {
+    #|      "id": "health",
+    #|      "route": "/health",
+    #|      "source": "app/entries/health.mbtx"
+    #|    }
+    #|  ]
+    #|}
+  let config = parse_sol_config(json)
+  assert_true(config.is_some())
+  let c = config.unwrap()
+  assert_eq(c.wasm_entrypoints.length(), 1)
+  let ep = c.wasm_entrypoints[0]
+  assert_eq(ep.runtime, parse_wasm_entrypoint_runtime("wagi"))
+  assert_eq(ep.methods.length(), 1)
+  assert_eq(ep.methods[0], "GET")
+}
+
+///|
+test "parse_sol_config: wasmEntryPoints with env and wac source" {
+  let json =
+    #|{
+    #|  "islands": [],
+    #|  "routes": "app/server",
+    #|  "wasmEntryPoints": [
+    #|    {
+    #|      "id": "composed_users",
+    #|      "route": "/users/composed",
+    #|      "source": "app/entries/users_show.wac",
+    #|      "runtime": "wagi",
+    #|      "method": ["GET"],
+    #|      "env": {
+    #|        "API_ORIGIN": "https://api.example.com",
+    #|        "FEATURE_FLAG": "on"
+    #|      }
+    #|    }
+    #|  ]
+    #|}
+  let config = parse_sol_config(json)
+  assert_true(config.is_some())
+  let c = config.unwrap()
+  assert_eq(c.wasm_entrypoints.length(), 1)
+  let ep = c.wasm_entrypoints[0]
+  assert_eq(ep.source, "app/entries/users_show.wac")
+  assert_true(ep.env.contains("API_ORIGIN"))
+  assert_true(ep.env.contains("FEATURE_FLAG"))
+  assert_eq(ep.env["API_ORIGIN"], "https://api.example.com")
+  assert_eq(ep.env["FEATURE_FLAG"], "on")
+}
+
+///|
+test "generate_wasm_manifest_json: includes route runtime and wasm path" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+    ),
+  ]
+  let manifest = generate_wasm_manifest_json(entries)
+  assert_true(manifest.contains("\"id\": \"users_show\""))
+  assert_true(manifest.contains("\"route\": \"/users/:id\""))
+  assert_true(manifest.contains("\"runtime\": \"wagi\""))
+  assert_true(
+    manifest.contains("\"wasm\": \".sol/wasm/entries/users_show/module.wasm\""),
+  )
+}
+
+///|
+test "generate_wasm_manifest_json: includes env and build metadata" {
+  let env_map : Map[String, String] = {
+    "API_ORIGIN": "https://api.example.com",
+    "FEATURE_FLAG": "on",
+  }
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+      env=env_map,
+    ),
+  ]
+  let manifest = generate_wasm_manifest_json(entries)
+  assert_true(manifest.contains("\"build\": \"moon-build\""))
+  assert_true(manifest.contains("\"env\": {"))
+  assert_true(manifest.contains("\"API_ORIGIN\": \"https://api.example.com\""))
+  assert_true(manifest.contains("\"FEATURE_FLAG\": \"on\""))
+}
+
+///|
+test "generate_wasm_env_json: includes runtime and env map" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+      env={ "API_ORIGIN": "https://api.example.com" },
+    ),
+  ]
+  let env_json = generate_wasm_env_json(entries)
+  assert_true(env_json.contains("\"id\": \"users_show\""))
+  assert_true(env_json.contains("\"runtime\": \"wagi\""))
+  assert_true(env_json.contains("\"API_ORIGIN\": \"https://api.example.com\""))
+}
+
+///|
+test "generate_spin_toml_fragment: wagi route mount" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET", "POST"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+    ),
+  ]
+  let fragment = generate_spin_toml_fragment(entries)
+  assert_true(fragment.contains("[[trigger.http]]"))
+  assert_true(fragment.contains("route = \"/users/:id\""))
+  assert_true(fragment.contains("component = \"users_show\""))
+  assert_true(fragment.contains("[component.users_show]"))
+  assert_true(fragment.contains("executor = \"wagi\""))
+}
+
+///|
+test "generate_spin_toml_fragment: includes environment table" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+      env={ "API_ORIGIN": "https://api.example.com", "FEATURE_FLAG": "on" },
+    ),
+  ]
+  let fragment = generate_spin_toml_fragment(entries)
+  assert_true(fragment.contains("[component.users_show.environment]"))
+  assert_true(fragment.contains("API_ORIGIN = \"https://api.example.com\""))
+  assert_true(fragment.contains("FEATURE_FLAG = \"on\""))
+}
+
+///|
+test "generate_mars_adapter_hints: includes spin_wagi manifest hints" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_show",
+      "/users/:id",
+      ["GET"],
+      parse_wasm_entrypoint_runtime("wagi"),
+      ".sol/wasm/entries/users_show/module.wasm",
+    ),
+  ]
+  let hints = generate_mars_adapter_hints(entries)
+  assert_true(hints.contains("# spin_wagi: users_show"))
+  assert_true(
+    hints.contains(
+      "[component.users_show] route=\"/users/:id\" executor=\"wagi\"",
+    ),
+  )
+}
+
+///|
+test "generate_mars_adapter_hints: includes wasm_component binding hints" {
+  let entries : Array[WasmMountEntry] = [
+    WasmMountEntry::new(
+      "users_component",
+      "/users/component",
+      ["POST"],
+      parse_wasm_entrypoint_runtime("component"),
+      ".sol/wasm/entries/users_component/module.wasm",
+    ),
+  ]
+  let hints = generate_mars_adapter_hints(entries)
+  assert_true(hints.contains("# wasm_component: users_component"))
+  assert_true(
+    hints.contains(
+      "component=users_component world=http-component export=handle",
+    ),
+  )
+}
+
+///|
+test "WasmEntrypointBuildOptions::default has ergonomic defaults" {
+  let opts = WasmEntrypointBuildOptions::default()
+  assert_true(opts.runtime_override is None)
+  assert_eq(opts.emit_spin_fragment, false)
+  assert_eq(opts.emit_env_json, true)
+  assert_eq(opts.write_if_changed, true)
+}
+
+///|
+test "WasmEntrypointBuildOptions::for_cli maps legacy flags" {
+  let opts = WasmEntrypointBuildOptions::for_cli(
+    runtime_override=Some(parse_wasm_entrypoint_runtime("wagi")),
+    emit_spin_fragment=true,
+  )
+  assert_true(opts.runtime_override is Some(_))
+  assert_eq(opts.emit_spin_fragment, true)
+  assert_eq(opts.emit_env_json, true)
+  assert_eq(opts.write_if_changed, true)
+}
