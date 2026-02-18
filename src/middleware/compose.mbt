@@ -66,6 +66,22 @@ pub async fn run(middleware : Middleware, ctx : Ctx) -> Bool raise Error {
 }
 
 ///|
+/// Execute middleware and convert unexpected errors to 500 response.
+/// Returns true if middleware halted request handling.
+pub async fn run_or_500(
+  middleware : Middleware,
+  ctx : Ctx,
+  message_prefix? : String = "Internal Server Error: ",
+) -> Bool {
+  run(middleware, ctx) catch {
+    e => {
+      ctx.text(message_prefix + e.to_string(), status=500)
+      true
+    }
+  }
+}
+
+///|
 /// Convert Middleware to Mars Handler for interoperability
 pub fn to_handler(mw : Middleware) -> @mars.Handler {
   let Middleware(h) = mw

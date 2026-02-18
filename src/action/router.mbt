@@ -51,7 +51,7 @@ pub fn register_actions(app : App, registry : ActionRegistry) -> Unit {
       path,
       @mars.handler(async fn(c) {
         // Run middleware chain
-        let halted = run_action_middleware(c, middleware_chain)
+        let halted = @middleware.run_or_500(middleware_chain, c)
         if halted {
           return
         }
@@ -71,25 +71,6 @@ pub fn register_actions(app : App, registry : ActionRegistry) -> Unit {
         action_result_to_response(c, result)
       }),
     )
-  }
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-///|
-/// Run middleware chain for actions
-/// Returns true if response was sent (halted), false if should continue
-async fn run_action_middleware(
-  c : Ctx,
-  middleware : @middleware.Middleware,
-) -> Bool {
-  @middleware.run(middleware, c) catch {
-    e => {
-      c.text("Internal Server Error: \{e}", status=500)
-      true
-    }
   }
 }
 

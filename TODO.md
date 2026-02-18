@@ -47,3 +47,5 @@
   対応: `file_router` の `source_path` 生成を主パラメータ + 追加パラメータの `k=v&...` 形式に拡張し、`page_generator` 側の複数クエリ復元テストを追加
 - [x] [P3] `docs/` と README のルーティング仕様記述を一本化（重複削減）  
   対応: `docs/routing.md` を単一ソースとして追加し、`README` と既存ルーティング文書を参照ベースに統合
+- [x] [P2] middleware 実行時の 500 エラーハンドリングを共通化  
+  対応: `@middleware.run_or_500` を追加し、`action` / `sol_routes` のローカル実装を削除して統一

@@ -485,21 +485,6 @@ pub fn register_sol_routes(
 }
 
 ///|
-/// Execute middleware chain
-/// Returns true if response was sent (halted), false if should continue
-async fn run_route_middleware(
-  c : Ctx,
-  middleware : @middleware.Middleware,
-) -> Bool {
-  @middleware.run(middleware, c) catch {
-    e => {
-      c.text("Internal Server Error: \{e}", status=500)
-      true
-    }
-  }
-}
-
-///|
 /// Render page and return HTML (helper for ISR)
 async fn render_page_to_html(
   _c : Ctx,
@@ -541,7 +526,7 @@ async fn handle_compiled_api_route(
   middleware_chain : @middleware.Middleware,
 ) -> Unit {
   // Run middleware chain first
-  let halted = run_route_middleware(c, middleware_chain)
+  let halted = @middleware.run_or_500(middleware_chain, c)
   if halted {
     return
   }
@@ -613,7 +598,7 @@ fn register_compiled_sol_routes(
       SolRouteKind::Page =>
         app.get(hono_pattern, async fn(c) {
           // Run middleware chain first
-          let halted = run_route_middleware(c, middleware_chain)
+          let halted = @middleware.run_or_500(middleware_chain, c)
           if halted {
             return
           }
