@@ -414,13 +414,38 @@ extern "js" fn encode_query_component(value : String) -> String =
   #| (value) => encodeURIComponent(value)
 
 ///|
-fn build_source_with_dynamic_param(
+fn build_source_with_dynamic_params(
   source_path : String,
   param_name : String,
   param_value : String,
+  param_set : Map[String, String],
 ) -> String {
-  let encoded_value = encode_query_component(param_value)
-  source_path + "?" + param_name + "=" + encoded_value
+  let sb = StringBuilder::new(size_hint=source_path.length() + 64)
+  sb.write_string(source_path)
+  sb.write_char('?')
+  sb.write_string(encode_query_component(param_name))
+  sb.write_char('=')
+  sb.write_string(encode_query_component(param_value))
+
+  // Keep primary dynamic param first, then append other params in key order.
+  let extra_keys : Array[String] = []
+  for key in param_set.keys() {
+    if key != param_name {
+      extra_keys.push(key)
+    }
+  }
+  extra_keys.sort_by(fn(a, b) { @ssg.compare_strings_lex(a, b) })
+  for key in extra_keys {
+    let value = match param_set.get(key) {
+      Some(v) => v
+      None => ""
+    }
+    sb.write_char('&')
+    sb.write_string(encode_query_component(key))
+    sb.write_char('=')
+    sb.write_string(encode_query_component(value))
+  }
+  sb.to_string()
 }
 
 ///|
@@ -532,8 +557,11 @@ fn[FS : @env.FileSystem] scan_dynamic_file_with_fs(
 
     // Store param info in source_path for later template processing
     // Format: path/to/_id_.md?id=<url-encoded-value>
-    let source_with_param = build_source_with_dynamic_param(
-      relative_path, param_name, param_value,
+    let source_with_param = build_source_with_dynamic_params(
+      relative_path,
+      param_name,
+      param_value,
+      param_set,
     )
     let page = @ssg.PageMeta::{
       source_path: source_with_param,
@@ -645,10 +673,11 @@ fn[FS : @env.FileSystem] scan_dynamic_dir_with_fs(
 
     // Store param info in source_path for later template processing
     // Format: _slug_/index.md?slug=<url-encoded-value>
-    let source_with_param = build_source_with_dynamic_param(
+    let source_with_param = build_source_with_dynamic_params(
       relative_path + "/index.md",
       param_name,
       param_value,
+      param_set,
     )
     let page = @ssg.PageMeta::{
       source_path: source_with_param,

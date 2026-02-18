@@ -248,44 +248,8 @@ pub fn config() -> @router.RouterConfig {
   - 目的: `ServerNode` ベースの SSR と layout 合成を含めて扱う
   - `SolRoutes::Layout` を実際に適用する
 
-詳細: `docs/router-layout-support.md`
-
-## Nested Layouts
-
-Support for hierarchical layout structures:
-
-```moonbit
-// Admin section layout
-using @server_dom.{ h1, nav, div, text, sol_link }
-
-fn admin_layout(
-  props : @router.PageProps,
-  content : @server_dom.ServerNode,
-) -> @server_dom.ServerNode raise {
-  @server_dom.ServerNode::sync(@luna.fragment([
-    h1([text("Admin Panel")]),
-    nav([
-      sol_link(href="/admin", [text("Dashboard")]),
-      sol_link(href="/admin/users", [text("Users")]),
-    ]),
-    div(class="admin-content", [content.to_vnode()]),
-  ]))
-}
-
-// Route definition
-// segment="/admin" + path="/" => /admin
-// segment="/admin" + path="/users" => /admin/users
-@router.SolRoutes::Layout(
-  segment="/admin",    // URL prefix
-  layout=admin_layout, // Layout function
-  children=[
-    // /admin
-    @router.SolRoutes::Page(path="/", handler=@router.PageHandler(admin_dashboard), title="Admin", meta=[], revalidate=None, cache=None),
-    // /admin/users
-    @router.SolRoutes::Page(path="/users", handler=@router.PageHandler(admin_users), title="Users", meta=[], revalidate=None, cache=None),
-  ],
-)
-```
+仕様の単一ソース: `docs/routing.md`  
+`Layout` の適用ルールと `source_path` の動的パラメータ形式はこのドキュメントを参照してください。
 
 ## Middleware
 
