@@ -13,6 +13,7 @@
 - [x] `router` を責務分割（`router_config` / `route_params` / `route_registration` / `route_rendering` / `router_hmr`）
 - [x] `register_routes` / `register_server_routes` の config 解決を `resolve_router_config` に統一
 - [x] `runtime` を起動境界で分割（`runtime_bootstrap` / `runtime_app_export` / `runtime_env_mount`）
+- [x] `runtime` の SSR/Island/Streaming/Static Serving をファイル分割（`runtime` / `runtime_island` / `runtime_streaming` / `runtime_static_serving`）
 - [x] `sol_routes` の API method 登録を `handle_compiled_api_route` + 共通登録ヘルパに統一
 - [x] `routes/file_router.mbt` の catch-all 動的パラメータ処理を実装（値正規化/空値対応）
 - [x] `Layout` の扱いを仕様化（`register_routes` は path grouping のみ、合成は `sol_routes`）
