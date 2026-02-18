@@ -23,6 +23,15 @@ pub fn send_json_error(
 }
 
 ///|
+/// Send 500 JSON error response.
+pub fn send_internal_error(
+  ctx : @mars.Context,
+  message? : String = "Internal Server Error",
+) -> Unit {
+  send_json_error(ctx, message, status=500)
+}
+
+///|
 extern "js" fn ffi_send_json_any(
   ctx : @mars.Context,
   data : @js.Any,

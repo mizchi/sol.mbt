@@ -49,3 +49,7 @@
   対応: `docs/routing.md` を単一ソースとして追加し、`README` と既存ルーティング文書を参照ベースに統合
 - [x] [P2] middleware 実行時の 500 エラーハンドリングを共通化  
   対応: `@middleware.run_or_500` を追加し、`action` / `sol_routes` のローカル実装を削除して統一
+- [x] [P2] 500 JSON エラーレスポンス送信を共通ヘルパへ統一  
+  対応: `@mars_response.send_internal_error` を追加し、`action` / `sol_routes` の 500 応答分岐を統一
+- [x] [P3] `middleware.to_handler` を段階的縮小（deprecated 化）  
+  対応: `to_handler` を `#deprecated` 指定し、公開 API 縮小の移行フェーズを開始

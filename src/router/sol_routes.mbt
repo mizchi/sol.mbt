@@ -541,7 +541,7 @@ async fn handle_compiled_api_route(
     Some(ApiHandler(handler)) => {
       let json : @js.Any = handler(props) catch {
         e => {
-          @mars_response.send_json_error(c, e.to_string(), status=500)
+          @mars_response.send_internal_error(c, message=e.to_string())
           return
         }
       }

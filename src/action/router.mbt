@@ -97,7 +97,7 @@ fn action_result_to_response(c : Ctx, result : ActionResult) -> Unit {
       // Log the actual error (implementation depends on logging setup)
       let _ = message
       // Don't expose internal error details in production
-      @mars_response.send_json_error(c, "Internal Server Error", status=500)
+      @mars_response.send_internal_error(c)
     }
   }
 }
