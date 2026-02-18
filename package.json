@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@hono/node-server": "^1.14.0",
-    "@luna_ui/luna": "^0.7.3",
+    "@luna_ui/luna": "^0.11.0",
     "@playwright/test": "^1.57.0",
     "@types/node": "^24.10.2",
     "@types/ws": "^8.18.1",
