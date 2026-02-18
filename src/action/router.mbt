@@ -45,12 +45,13 @@ pub fn register_actions(app : App, registry : ActionRegistry) -> Unit {
     for mw in action.middlewares {
       middlewares.push(mw)
     }
+    let middleware_chain = @middleware.pipeline(middlewares)
     let handler = action.handler
     app.post(
       path,
       @mars.handler(async fn(c) {
         // Run middleware chain
-        let halted = run_action_middlewares(c, middlewares)
+        let halted = run_action_middleware(c, middleware_chain)
         if halted {
           return
         }
@@ -80,26 +81,16 @@ pub fn register_actions(app : App, registry : ActionRegistry) -> Unit {
 ///|
 /// Run middleware chain for actions
 /// Returns true if response was sent (halted), false if should continue
-async fn run_action_middlewares(
+async fn run_action_middleware(
   c : Ctx,
-  middlewares : Array[@middleware.Middleware],
+  middleware : @middleware.Middleware,
 ) -> Bool {
-  if middlewares.is_empty() {
-    return false
-  }
-  for mw in middlewares {
-    if c.is_response_sent() {
-      return true
-    }
-    let @middleware.Middleware(@mars.Handler(h)) = mw
-    h(c) catch {
-      e => {
-        c.text("Internal Server Error: \{e}", status=500)
-        return true
-      }
+  @middleware.run(middleware, c) catch {
+    e => {
+      c.text("Internal Server Error: \{e}", status=500)
+      true
     }
   }
-  c.is_response_sent()
 }
 
 ///|

@@ -36,7 +36,12 @@
 - [x] [P3] wasm hint/manifest の責務整理  
   対応: `generate_mars_adapter_hints` を追加し、`mars` adapter の `manifest_hint` / `binding_hint` を利用して `.sol/wasm/mars-adapter.hints` を出力
 
+- [x] [P2] middleware 実行を `mars.compose` ベースへ統一  
+  対応: `middleware.pipeline` を `@mars.compose` ベースへ変更し、`action` / `sol_routes` の独自 middleware ループを削除
+
 ## 次の概念整理候補
 
+- [x] [P1] `runtime` の `mars` 重複 API を縮小（`create_app` / `api` / `api_post` / `get_request_path`）  
+  対応: `src/runtime.mbt` から重複 API を削除し、CLI 生成コード/E2E 参照を `@mars.Server::new` と `app.get/post` へ移行
 - [ ] [P2] `source_path` 動的パラメータ形式を `k=v&...` 前提で複数パラメータ対応するか検討
 - [ ] [P3] `docs/` と README のルーティング仕様記述を一本化（重複削減）

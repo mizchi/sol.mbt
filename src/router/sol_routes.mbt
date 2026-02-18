@@ -487,26 +487,16 @@ pub fn register_sol_routes(
 ///|
 /// Execute middleware chain
 /// Returns true if response was sent (halted), false if should continue
-async fn run_middlewares(
+async fn run_route_middleware(
   c : Ctx,
-  middlewares : Array[@middleware.Middleware],
+  middleware : @middleware.Middleware,
 ) -> Bool {
-  if middlewares.is_empty() {
-    return false
-  }
-  for mw in middlewares {
-    if c.is_response_sent() {
-      return true
-    }
-    let @middleware.Middleware(@mars.Handler(h)) = mw
-    h(c) catch {
-      e => {
-        c.text("Internal Server Error: \{e}", status=500)
-        return true
-      }
+  @middleware.run(middleware, c) catch {
+    e => {
+      c.text("Internal Server Error: \{e}", status=500)
+      true
     }
   }
-  c.is_response_sent()
 }
 
 ///|
@@ -545,9 +535,13 @@ async fn render_page_to_html(
 }
 
 ///|
-async fn handle_compiled_api_route(c : Ctx, route : CompiledSolRoute) -> Unit {
+async fn handle_compiled_api_route(
+  c : Ctx,
+  route : CompiledSolRoute,
+  middleware_chain : @middleware.Middleware,
+) -> Unit {
   // Run middleware chain first
-  let halted = run_middlewares(c, route.middlewares)
+  let halted = run_route_middleware(c, middleware_chain)
   if halted {
     return
   }
@@ -590,8 +584,11 @@ fn register_compiled_api_route(
   kind : SolRouteKind,
   hono_pattern : String,
   route : CompiledSolRoute,
+  middleware_chain : @middleware.Middleware,
 ) -> Unit {
-  let handler = async fn(c) { handle_compiled_api_route(c, route) }
+  let handler = async fn(c) {
+    handle_compiled_api_route(c, route, middleware_chain)
+  }
   match kind {
     SolRouteKind::GetApi => app.get(hono_pattern, handler)
     SolRouteKind::PostApi => app.post(hono_pattern, handler)
@@ -611,11 +608,12 @@ fn register_compiled_sol_routes(
   for route in routes {
     // Convert catch-all pattern to Hono wildcard pattern
     let hono_pattern = convert_to_hono_pattern(route.pattern, route.catch_all)
+    let middleware_chain = @middleware.pipeline(route.middlewares)
     match route.kind {
       SolRouteKind::Page =>
         app.get(hono_pattern, async fn(c) {
           // Run middleware chain first
-          let halted = run_middlewares(c, route.middlewares)
+          let halted = run_route_middleware(c, middleware_chain)
           if halted {
             return
           }
@@ -740,7 +738,13 @@ fn register_compiled_sol_routes(
         })
       kind =>
         if is_api_route_kind(kind) {
-          register_compiled_api_route(app, kind, hono_pattern, route)
+          register_compiled_api_route(
+            app,
+            kind,
+            hono_pattern,
+            route,
+            middleware_chain,
+          )
         }
     }
   }

@@ -13,12 +13,6 @@ pub type App = @mars.Server
 pub type Ctx = @mars.Context
 
 ///|
-/// Create a new Sol application
-pub fn create_app() -> App {
-  @mars.Server::new()
-}
-
-///|
 /// Render a VNode to HTML string with full document wrapper
 /// Use hydration=true to enable hydration markers (for pages with Islands)
 pub fn[E] render_page(
@@ -88,13 +82,6 @@ pub fn[E] page(
   )
 }
 
-///|
-/// Register an API route that returns JSON
-pub fn api(app : App, path : String, handler : (Ctx) -> Json) -> Unit {
-  app.get(path, @mars.handler(async fn(c) { c.json(handler(c)) }))
-}
-
-///|
 /// Create a plain JavaScript object from key-value pairs
 /// Use this for API responses instead of MoonBit Map
 extern "js" fn ffi_create_json_obj(pairs : Array[(String, @js.Any)]) -> @js.Any =
@@ -147,12 +134,6 @@ pub fn json_array_to_any(arr : Array[Json]) -> @js.Any {
 ///|
 extern "js" fn ffi_array_to_any(arr : Array[@js.Any]) -> @js.Any =
   #| (arr) => arr
-
-///|
-/// Register a POST API route
-pub fn api_post(app : App, path : String, handler : (Ctx) -> Json) -> Unit {
-  app.post(path, @mars.handler(async fn(c) { c.json(handler(c)) }))
-}
 
 // ============================================================================
 // Island Architecture Support
@@ -679,13 +660,6 @@ pub fn read_file_sync(path : String) -> String? {
   ffi_read_file_sync(path)
 }
 
-///|
-/// Get request pathname from context
-pub fn get_request_path(ctx : Ctx) -> String {
-  ctx.path()
-}
-
-///|
 /// Static file configuration
 pub struct StaticFileConfig {
   /// URL path prefix (e.g., "/static")

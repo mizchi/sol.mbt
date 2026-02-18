@@ -9,10 +9,6 @@ import {
 }
 
 // Values
-pub fn api(@mars.Server, String, (@mars.Context) -> Json) -> Unit
-
-pub fn api_post(@mars.Server, String, (@mars.Context) -> Json) -> Unit
-
 pub async fn build(BundleConfig) -> RolldownOutput
 
 pub async fn build_from_manifest(IslandManifest) -> RolldownOutput
@@ -24,8 +20,6 @@ pub async fn bundle_islands(Array[(String, String)], String) -> RolldownOutput
 pub async fn bundle_islands_prod(Array[(String, String)], String) -> RolldownOutput
 
 pub async fn bundle_islands_result(Array[(String, String)], String) -> BundleResult
-
-pub fn create_app() -> @mars.Server
 
 pub fn create_app_then((@mars.Server) -> Unit) -> Unit
 
@@ -42,8 +36,6 @@ pub fn get_hmr_port() -> Int
 pub fn get_hmr_script() -> String
 
 pub fn get_port() -> Int
-
-pub fn get_request_path(@mars.Context) -> String
 
 pub fn[E] island(String, String, String, Array[@mizchi/luna/core.Node[E, String]], trigger? : @mizchi/luna/core.TriggerType) -> @mizchi/luna/core.Node[E, String]
 
