@@ -21,6 +21,7 @@ pub async fn bundle_islands_prod(Array[(String, String)], String) -> RolldownOut
 
 pub async fn bundle_islands_result(Array[(String, String)], String) -> BundleResult
 
+#deprecated
 pub fn create_app_then((@mars.Server) -> Unit) -> Unit
 
 pub let default_loader_url : String
@@ -79,6 +80,7 @@ pub fn run((@mars.Server) -> Unit, port? : Int) -> Unit
 
 pub fn run_app(() -> @mars.Server, port? : Int) -> Unit
 
+#deprecated
 pub fn serve(@mars.Server, Int) -> Unit
 
 pub fn serve_static(@mars.Server, config? : StaticFileConfig) -> Unit

@@ -32,7 +32,7 @@ clean:
 # MoonBit ビルド
 build-moon:
     moon build --target js
-    @rm -f target/js/release/build/package.json
+    @rm -f target/js/debug/build/package.json
 
 # MoonBit デバッグビルド（ソースマップ付き）
 build-debug:
@@ -86,7 +86,7 @@ test-all: test test-ssg test-xplat test-e2e test-sol-app
 # Sol CLI
 sol *args:
     @just build-moon
-    node target/js/release/build/cli/cli.js {{args}}
+    node target/js/debug/build/cli/cli.js {{args}}
 
 # =============================================================================
 # Examples
@@ -95,7 +95,7 @@ sol *args:
 # sol_app 開発サーバー（フレームワークホットリロード付き）
 dev-app:
     just build-moon
-    cd examples/sol_app && node ../../target/js/release/build/cli/cli.js dev -f
+    cd examples/sol_app && node ../../target/js/debug/build/cli/cli.js dev -f
 
 # examples のキャッシュクリーン
 clean-examples:
@@ -149,17 +149,17 @@ check-examples: check-example-sol-app check-example-sol-auth check-example-sol-b
 # docs 開発サーバー
 dev-doc:
     just build-moon
-    cd website && node ../target/js/release/build/cli/cli.js dev
+    cd website && node ../target/js/debug/build/cli/cli.js dev
 
 # docs ビルド
 build-doc *args:
     just build-moon
-    node target/js/release/build/cli/cli.js build {{args}}
+    node target/js/debug/build/cli/cli.js build {{args}}
 
 # docs lint
 lint-doc:
     just build-moon
-    node target/js/release/build/cli/cli.js lint
+    node target/js/debug/build/cli/cli.js lint
 
 # docs プレビュー
 preview-doc:

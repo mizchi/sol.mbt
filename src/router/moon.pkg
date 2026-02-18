@@ -14,6 +14,9 @@ import {
   "mizchi/js/web/url" @url,
   "mizchi/sol/internal/utils" @utils,
   "mizchi/sol/internal/mars_response" @mars_response,
+  "mizchi/sol/hot_reload" @hot_reload,
+  "mizchi/sol/internal/page_shell" @page_shell,
+  "mizchi/sol/internal/js_any" @js_any,
 }
 
 warnings = "-24-67-29"

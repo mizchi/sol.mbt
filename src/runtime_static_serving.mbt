@@ -61,6 +61,37 @@ pub fn read_file_sync(path : String) -> String? {
   ffi_read_file_sync(path)
 }
 
+///|
+fn content_type_for_file(filename : String) -> String {
+  if filename.has_suffix(".js") {
+    "application/javascript"
+  } else if filename.has_suffix(".css") {
+    "text/css"
+  } else if filename.has_suffix(".html") {
+    "text/html"
+  } else {
+    "text/plain"
+  }
+}
+
+///|
+fn apply_static_headers(c : Ctx, content_type : String, cache_control : String) -> Unit {
+  c.set_header("Content-Type", content_type)
+  c.set_header("Cache-Control", cache_control)
+  c.set_header("X-Content-Type-Options", "nosniff")
+}
+
+///|
+fn send_static_text(
+  c : Ctx,
+  body : String,
+  content_type : String,
+  cache_control : String,
+) -> Unit {
+  apply_static_headers(c, content_type, cache_control)
+  c.text(body)
+}
+
 /// Static file configuration
 pub struct StaticFileConfig {
   /// URL path prefix (e.g., "/static")
@@ -157,9 +188,21 @@ pub fn serve_static_dir(app : App, config : StaticDirServeConfig) -> Unit {
       } else if rest.has_suffix(".html") {
         serve_static_html_async(c, local_dir, rest)
       } else if rest.has_suffix(".css") {
-        serve_static_css_async(c, local_dir, rest)
+        serve_static_text_file(
+          c,
+          local_dir,
+          rest,
+          "text/css",
+          "/* Not found: " + rest + " */",
+        )
       } else if rest.has_suffix(".js") {
-        serve_static_js_async(c, local_dir, rest)
+        serve_static_text_file(
+          c,
+          local_dir,
+          rest,
+          "application/javascript",
+          "// Not found: " + rest,
+        )
       } else {
         // Try as directory with index.html
         serve_static_html_async(c, local_dir, rest + "/index.html")
@@ -182,30 +225,18 @@ fn serve_static_html_async(
 }
 
 ///|
-fn serve_static_css_async(
+fn serve_static_text_file(
   c : Ctx,
   local_dir : String,
   filename : String,
+  content_type : String,
+  not_found_body : String,
 ) -> Unit {
   let path = local_dir + "/" + filename
-  c.set_header("Content-Type", "text/css")
+  c.set_header("Content-Type", content_type)
   match read_file_sync(path) {
     Some(content) => c.text(content)
-    None => c.text("/* Not found: " + filename + " */")
-  }
-}
-
-///|
-fn serve_static_js_async(
-  c : Ctx,
-  local_dir : String,
-  filename : String,
-) -> Unit {
-  let path = local_dir + "/" + filename
-  c.set_header("Content-Type", "application/javascript")
-  match read_file_sync(path) {
-    Some(content) => c.text(content)
-    None => c.text("// Not found: " + filename)
+    None => c.text(not_found_body)
   }
 }
 
@@ -216,7 +247,7 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
   let prefix = cfg.path_prefix
   let mappings = cfg.mappings
   // In dev mode, disable caching to avoid stale JS/CSS issues
-  let cache_ctl = if is_dev_mode() {
+  let cache_ctl = if @hot_reload.is_dev_mode() {
     "no-cache, no-store, must-revalidate"
   } else {
     cfg.cache_control
@@ -232,26 +263,19 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
       for mapping in mappings {
         let (url_file, local_path) = mapping
         if filename == url_file {
+          let content_type = content_type_for_file(url_file)
           match read_file_sync(local_path) {
             Some(content) => {
-              let content_type = if url_file.has_suffix(".js") {
-                "application/javascript"
-              } else if url_file.has_suffix(".css") {
-                "text/css"
-              } else {
-                "text/plain"
-              }
-              c.set_header("Content-Type", content_type)
-              c.set_header("Cache-Control", cache_ctl)
-              c.set_header("X-Content-Type-Options", "nosniff")
-              c.text(content)
+              send_static_text(c, content, content_type, cache_ctl)
               return
             }
             None => {
-              c.set_header("Content-Type", "application/javascript")
-              c.set_header("Cache-Control", cache_ctl)
-              c.set_header("X-Content-Type-Options", "nosniff")
-              c.text("// " + url_file + " not found")
+              send_static_text(
+                c,
+                "// " + url_file + " not found",
+                content_type,
+                cache_ctl,
+              )
               return
             }
           }
@@ -273,25 +297,11 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
       }
       match content {
         Some(content) => {
-          let content_type = if filename.has_suffix(".js") {
-            "application/javascript"
-          } else if filename.has_suffix(".css") {
-            "text/css"
-          } else if filename.has_suffix(".html") {
-            "text/html"
-          } else {
-            "text/plain"
-          }
-          c.set_header("Content-Type", content_type)
-          c.set_header("Cache-Control", cache_ctl)
-          c.set_header("X-Content-Type-Options", "nosniff")
-          c.text(content)
+          let content_type = content_type_for_file(filename)
+          send_static_text(c, content, content_type, cache_ctl)
         }
         None => {
-          c.set_header("Content-Type", "text/plain")
-          c.set_header("Cache-Control", cache_ctl)
-          c.set_header("X-Content-Type-Options", "nosniff")
-          c.text("Not found: " + filename)
+          send_static_text(c, "Not found: " + filename, "text/plain", cache_ctl)
         }
       }
     }),

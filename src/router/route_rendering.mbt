@@ -93,11 +93,12 @@ fn[E] render_page_html(
     (result.html, tags)
   }
   // Add HMR script in dev mode
-  let full_head = if is_dev_mode() { head + get_hmr_script() } else { head }
-  // Replace placeholders in template
-  template
-  .replace(old="__LUNA_TITLE__", new=title)
-  .replace(old="__LUNA_PRELOAD__", new=preload_tags)
-  .replace(old="__LUNA_HEAD__", new=full_head)
-  .replace(old="__LUNA_MAIN__", new=body_html)
+  let full_head = @hot_reload.with_dev_head_script(head)
+  @page_shell.render_template(
+    template,
+    title,
+    full_head,
+    preload_tags,
+    body_html,
+  )
 }

@@ -135,21 +135,17 @@ pub fn render_island_page(
   let title_str = title.unwrap_or("App")
   let head_str = head.unwrap_or("")
   let loader = loader_url.unwrap_or(default_loader_url)
+  let full_head = head_str + "<script type=\"module\" src=\"" + loader + "\"></script>"
   let sb = StringBuilder::new(size_hint=4096)
-  sb.write_string(
-    "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>",
-  )
-  sb.write_string(title_str)
-  sb.write_string("</title>")
-  sb.write_string(head_str)
-  sb.write_string("<script type=\"module\" src=\"")
-  sb.write_string(loader)
-  sb.write_string("\"></script></head><body>")
   for island_html in islands {
     sb.write_string(island_html)
   }
-  sb.write_string("</body></html>")
-  sb.to_string()
+  @page_shell.render_document(
+    title_str,
+    full_head,
+    sb.to_string(),
+    wrap_in_app=false,
+  )
 }
 
 ///|
@@ -297,9 +293,9 @@ pub fn[E] wc_page(
       let loader_script = "<script type=\"module\" src=\"" +
         loader +
         "\"></script>"
-      // Add HMR script in dev mode
-      let dev_script = if is_dev_mode() { get_hmr_script() } else { "" }
-      let full_head = head.unwrap_or("") + loader_script + dev_script
+      let full_head = @hot_reload.with_dev_head_script(
+        head.unwrap_or("") + loader_script,
+      )
       let html = render_page(node, title?, head=full_head, hydration=true)
       c.html(html)
     }),
@@ -334,13 +330,7 @@ pub fn[E] render_page_with_preloads(
 
   // Combine head with preload tags
   let head_str = head.unwrap_or("") + preload_tags
-  "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-  title_str +
-  "</title>" +
-  head_str +
-  "</head><body><div id=\"app\">" +
-  result.html +
-  "</div></body></html>"
+  @page_shell.render_document(title_str, head_str, result.html)
 }
 
 // ============================================================================

@@ -19,14 +19,20 @@ fn select_bootstrap_mode(
 }
 
 ///|
-/// Create a new Sol application and run callback with it
-/// This is useful for main function that cannot be async
-pub fn create_app_then(callback : (App) -> Unit) -> Unit {
+fn with_created_app(callback : (App) -> Unit) -> Unit {
   // Initialize fs module first, then create Server app
   with_initialized_fs(fn() {
     let app = @mars.Server::new()
     callback(app)
   })
+}
+
+///|
+/// Create a new Sol application and run callback with it
+/// This is useful for main function that cannot be async
+#deprecated
+pub fn create_app_then(callback : (App) -> Unit) -> Unit {
+  with_created_app(callback)
 }
 
 ///|
@@ -41,7 +47,7 @@ pub fn create_app_then(callback : (App) -> Unit) -> Unit {
 /// ```
 pub fn run(configure : (App) -> Unit, port? : Int) -> Unit {
   let port = port.unwrap_or_else(get_port)
-  create_app_then(fn(app) {
+  with_created_app(fn(app) {
     configure(app)
     export_runtime_app(app)
     maybe_start_server(app, port)

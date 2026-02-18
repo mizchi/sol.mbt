@@ -751,7 +751,7 @@ async fn render_server_fragment(
   buf.write_string(body_html)
   buf.write_string("</template>")
   buf.write_string("<template data-sol-title>")
-  buf.write_string(escape_html_title(title))
+  buf.write_string(@page_shell.escape_html_text(title))
   buf.write_string("</template>")
   buf.to_string()
 }
@@ -768,30 +768,8 @@ async fn render_server_page_html(
   let resolved_node = node.resolve()
   let body_html = @render.render_to_string(resolved_node).html
   // Add HMR script in dev mode
-  let full_head = if is_dev_mode() { head + get_hmr_script() } else { head }
-  // Replace placeholders in template
-  template
-  .replace(old="__LUNA_TITLE__", new=title)
-  .replace(old="__LUNA_PRELOAD__", new="")
-  .replace(old="__LUNA_HEAD__", new=full_head)
-  .replace(old="__LUNA_MAIN__", new=body_html)
-}
-
-///|
-/// Escape HTML entities in title
-fn escape_html_title(s : String) -> String {
-  let buf = StringBuilder::new()
-  for ch in s {
-    match ch {
-      '<' => buf.write_string("&lt;")
-      '>' => buf.write_string("&gt;")
-      '&' => buf.write_string("&amp;")
-      '"' => buf.write_string("&quot;")
-      '\'' => buf.write_string("&#39;")
-      _ => buf.write_char(ch)
-    }
-  }
-  buf.to_string()
+  let full_head = @hot_reload.with_dev_head_script(head)
+  @page_shell.render_template(template, title, full_head, "", body_html)
 }
 
 // ============================================================================

@@ -91,6 +91,17 @@ fn generate_server_pkg(routes_pkg : String) -> String {
 // =============================================================================
 
 ///|
+fn write_port_and_log(buf : StringBuilder, port_expr : String) -> Unit {
+  buf.write_string(port_expr)
+  buf.write_string("console.log(`Server running at http://localhost:${port}`);\n")
+}
+
+///|
+fn write_node_port_and_log(buf : StringBuilder) -> Unit {
+  write_port_and_log(buf, "const port = parseInt(process.env.PORT || '7777', 10);\n")
+}
+
+///|
 /// Generate .sol/{mode}/server/main.js entry point (MoonBit mode)
 /// Path: .sol/{mode}/server/main.js -> ../../../_build/js/release/build/__gen__/server/server.js
 pub fn generate_sol_server_main_js(
@@ -153,12 +164,7 @@ pub fn generate_sol_server_main_js(
       )
       buf.write_string("// Deno runtime\n")
       buf.write_string("const app = globalThis.__SOL_APP__;\n")
-      buf.write_string(
-        "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {
@@ -170,12 +176,7 @@ pub fn generate_sol_server_main_js(
       )
       buf.write_string("// Bun runtime\n")
       buf.write_string("const app = globalThis.__SOL_APP__;\n")
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("export default {\n")
       buf.write_string("  port,\n")
       buf.write_string("  fetch: app.fetch\n")
@@ -220,12 +221,7 @@ pub fn generate_sol_server_main_js_hybrid(
       buf.write_string(
         "const app = registerRoutes(new Hono(), routes(), config?.() || {});\n\n",
       )
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("serve({ fetch: app.fetch, port });\n")
     }
     RuntimeCloudflare => {
@@ -240,12 +236,7 @@ pub fn generate_sol_server_main_js_hybrid(
       buf.write_string(
         "const app = registerRoutes(new Hono(), routes(), config?.() || {});\n",
       )
-      buf.write_string(
-        "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {
@@ -253,12 +244,7 @@ pub fn generate_sol_server_main_js_hybrid(
       buf.write_string(
         "const app = registerRoutes(new Hono(), routes(), config?.() || {});\n",
       )
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("export default {\n")
       buf.write_string("  port,\n")
       buf.write_string("  fetch: app.fetch\n")
@@ -293,30 +279,15 @@ pub fn generate_sol_serve_js(adapter : ServerRuntime) -> String {
       buf.write_string(
         "const { serve } = await import('@hono/node-server');\n\n",
       )
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("serve({ fetch: app.fetch, port });\n")
     }
     RuntimeDeno => {
-      buf.write_string(
-        "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("export default {\n")
       buf.write_string("  port,\n")
       buf.write_string("  fetch: app.fetch\n")
@@ -331,12 +302,7 @@ pub fn generate_sol_serve_js(adapter : ServerRuntime) -> String {
       buf.write_string(
         "const { serve } = await import('@hono/node-server');\n\n",
       )
-      buf.write_string(
-        "const port = parseInt(process.env.PORT || '7777', 10);\n",
-      )
-      buf.write_string(
-        "console.log(`Server running at http://localhost:${port}`);\n",
-      )
+      write_node_port_and_log(buf)
       buf.write_string("serve({ fetch: app.fetch, port });\n")
     }
   }

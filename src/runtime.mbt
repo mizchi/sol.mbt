@@ -29,13 +29,7 @@ pub fn[E] render_page(
   } else {
     @render.render_to_string(node).html
   }
-  "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-  title_str +
-  "</title>" +
-  head_str +
-  "</head><body><div id=\"app\">" +
-  body_html +
-  "</div></body></html>"
+  @page_shell.render_document(title_str, head_str, body_html)
 }
 
 ///|
@@ -61,20 +55,19 @@ pub fn[E] page(
     @mars.handler(async fn(c) {
       let node = render_fn(c)
       let enable_hydration = hydration.unwrap_or(false)
-      // Add HMR script in dev mode
-      let dev_script = if is_dev_mode() { get_hmr_script() } else { "" }
+      let base_head = head.unwrap_or("")
       if enable_hydration {
         // Hydration enabled: render with hydration markers and include loader script
         let loader = loader_url.unwrap_or(default_loader_url)
         let loader_script = "<script type=\"module\" src=\"" +
           loader +
           "\"></script>"
-        let full_head = head.unwrap_or("") + loader_script + dev_script
+        let full_head = @hot_reload.with_dev_head_script(base_head + loader_script)
         let html = render_page(node, title?, head=full_head, hydration=true)
         c.html(html)
       } else {
         // Static page: render without hydration (but still add HMR in dev)
-        let full_head = head.unwrap_or("") + dev_script
+        let full_head = @hot_reload.with_dev_head_script(base_head)
         let html = render_page(node, title?, head=full_head)
         c.html(html)
       }
@@ -82,15 +75,10 @@ pub fn[E] page(
   )
 }
 
-/// Create a plain JavaScript object from key-value pairs
-/// Use this for API responses instead of MoonBit Map
-extern "js" fn ffi_create_json_obj(pairs : Array[(String, @js.Any)]) -> @js.Any =
-  #| (pairs) => Object.fromEntries(pairs.map(p => [p._0, p._1]))
-
 ///|
 /// Create a JSON object for API responses
 pub fn json_obj(pairs : Array[(String, @js.Any)]) -> @js.Any {
-  ffi_create_json_obj(pairs)
+  @js_any.json_obj(pairs)
 }
 
 ///|
@@ -134,4 +122,3 @@ pub fn json_array_to_any(arr : Array[Json]) -> @js.Any {
 ///|
 extern "js" fn ffi_array_to_any(arr : Array[@js.Any]) -> @js.Any =
   #| (arr) => arr
-

@@ -19,16 +19,14 @@ pub fn render_streaming_page(
   let loader = loader_url.unwrap_or(default_loader_url)
 
   // Build header HTML
-  let header_html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-    title_str +
-    "</title>" +
-    head_str +
-    "<script type=\"module\" src=\"" +
-    loader +
-    "\"></script></head><body><div id=\"app\">"
+  let header_html = @page_shell.render_streaming_header(
+    title_str,
+    head_str,
+    loader,
+  )
 
   // Build footer HTML
-  let footer_html = "</div></body></html>"
+  let footer_html = @page_shell.render_streaming_footer()
 
   // Create streaming response with async resolution
   let stream = create_streaming_response_with_async(
@@ -93,14 +91,12 @@ pub fn streaming_page(
       let title_str = title.unwrap_or("App")
       let head_str = head.unwrap_or("")
       let loader = loader_url.unwrap_or(default_loader_url)
-      let header_html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" +
-        title_str +
-        "</title>" +
-        head_str +
-        "<script type=\"module\" src=\"" +
-        loader +
-        "\"></script></head><body><div id=\"app\">"
-      let footer_html = "</div></body></html>"
+      let header_html = @page_shell.render_streaming_header(
+        title_str,
+        head_str,
+        loader,
+      )
+      let footer_html = @page_shell.render_streaming_footer()
       // Create streaming response and send via FFI
       let stream = create_streaming_response_with_async(
         header_html, footer_html, shell,

@@ -251,6 +251,8 @@ pub fn config() -> @router.RouterConfig {
 仕様の単一ソース: `docs/routing.md`  
 `Layout` の適用ルールと `source_path` の動的パラメータ形式はこのドキュメントを参照してください。
 
+Hot Reload 共通設計: `docs/hot-reload.md`
+
 ## Middleware
 
 Railway Oriented Programming based middleware system.

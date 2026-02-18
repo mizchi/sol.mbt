@@ -14,6 +14,7 @@
 - [x] `register_routes` / `register_server_routes` の config 解決を `resolve_router_config` に統一
 - [x] `runtime` を起動境界で分割（`runtime_bootstrap` / `runtime_app_export` / `runtime_env_mount`）
 - [x] `runtime` の SSR/Island/Streaming/Static Serving をファイル分割（`runtime` / `runtime_island` / `runtime_streaming` / `runtime_static_serving`）
+- [x] `sol` / `mars` で共有しやすい Hot Reload API を `hot_reload` パッケージへ分離（port 解決・script 注入・HTML 注入）
 - [x] `sol_routes` の API method 登録を `handle_compiled_api_route` + 共通登録ヘルパに統一
 - [x] `routes/file_router.mbt` の catch-all 動的パラメータ処理を実装（値正規化/空値対応）
 - [x] `Layout` の扱いを仕様化（`register_routes` は path grouping のみ、合成は `sol_routes`）
@@ -54,3 +55,25 @@
   対応: `@mars_response.send_internal_error` を追加し、`action` / `sol_routes` の 500 応答分岐を統一
 - [x] [P3] `middleware.to_handler` を段階的縮小（deprecated 化）  
   対応: `to_handler` を `#deprecated` 指定し、公開 API 縮小の移行フェーズを開始
+
+## 追加で潰した項目（2026-02-18）
+
+- [x] [P2] SSR page shell テンプレ処理の重複削減  
+  対応: `src/internal/page_shell` を追加し、`runtime` / `router` の document/template 組み立てを統一
+- [x] [P2] JavaScript object 生成の重複削減  
+  対応: `src/internal/js_any` を追加し、`runtime` / `router` の `json_obj` 実装を統一
+- [x] [P2] `router` 側 HMR 中継層の削除  
+  対応: `src/router/router_hmr.mbt` を廃止し、`@hot_reload.with_dev_head_script` へ統一
+- [x] [P3] HMR メッセージ型の導入と timestamp overflow 修正  
+  対応: `HmrMessage` を追加し、`notify_update` の timestamp を `Double` で送信
+- [x] [P3] `just sol` の CLI エントリパス不整合を修正  
+  対応: `justfile` の参照先を `target/js/debug/build/cli/cli.js` に統一
+- [x] [P3] deprecated warning の解消  
+  対応: `create_app_then` / `serve` の内部実装を分離し、内部呼び出しから deprecated シンボルを除去
+- [x] [P3] static css/js 配信ロジックの重複削減  
+  対応: `serve_static_text_file` へ統合
+
+## 次の候補（未着手）
+
+- [ ] [P2] `runtime_env_mount` の `get_hmr_script` / `get_hmr_port` を deprecated 化し `@hot_reload` 直接利用へ寄せる
+- [ ] [P2] `runtime_static_serving` の `text_response` / `js_response` / `static_response` の使用実態を確認し、不要公開 API を縮小する

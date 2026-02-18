@@ -26,6 +26,7 @@ import {
   "mizchi/mars/adapters" @mars_adapters,
   "mizchi/sol/parser" @parser,
   "mizchi/sol/hmr" @hmr,
+  "mizchi/sol/hot_reload" @hot_reload,
   "mizchi/sol/cli_common" @cli_common,
 }
 

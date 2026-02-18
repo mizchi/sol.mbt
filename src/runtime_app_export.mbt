@@ -46,15 +46,21 @@ fn should_start_server() -> Bool {
 fn maybe_start_server(app : App, port : Int) -> Unit {
   if should_start_server() {
     println("Server running at http://localhost:" + port.to_string())
-    serve(app, port)
+    serve_runtime(app, port)
   }
 }
 
 ///|
-/// Serve the app using @hono/node-server
-pub fn serve(app : App, port : Int) -> Unit {
+fn serve_runtime(app : App, port : Int) -> Unit {
   let fetch_handler = app.to_fetch_handler()
   ffi_serve(ffi_convert_fetch_handler(@js.any(fetch_handler)), port)
+}
+
+///|
+/// Serve the app using @hono/node-server
+#deprecated
+pub fn serve(app : App, port : Int) -> Unit {
+  serve_runtime(app, port)
 }
 
 ///|
