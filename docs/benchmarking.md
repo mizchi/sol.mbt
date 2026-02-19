@@ -19,7 +19,7 @@
 just bench-k6
 
 # mix profile (multi-run, median summary)
-just bench-k6 60 30s 0.05 3
+just bench-k6 60 30s 0.05 5
 
 # route profile
 just bench-k6-profile 10 10s
@@ -63,3 +63,17 @@ just bench-k6-compare bench/k6/results/base.json bench/k6/results/candidate.json
   - mix 指標 + route 指標を同時に比較
 
 出力は `baseline` / `candidate` / `delta` / `delta%` / `verdict` の表形式です。
+
+## 6. 高負荷時のばらつき切り分け
+
+高負荷時に結果がぶれる場合は、次の手順を標準化します。
+
+1. CPU 条件を固定する
+   - 同一マシン・同一電源状態で実行し、不要なバックグラウンド処理を停止する
+   - Linux では可能なら `cpupower` で governor を `performance` に固定する
+2. ウォームアップを先に行う
+   - 本計測前に `just bench-k6-quick` を 1-2 回実行し、JIT/ファイルキャッシュ初期化の揺れを除外する
+3. 再計測回数を固定する
+   - 高負荷比較は `just bench-k6 60 30s 0.05 5` を基準とし、`runs=5` の中央値を採用する
+4. ばらつきが大きい場合は route profile で切り分ける
+   - `http_req_duration p95` の `max-min` が中央値の 10% を超えたら `just bench-k6-profile 10 10s` で route 別の偏りを確認する

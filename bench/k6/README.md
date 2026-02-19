@@ -21,8 +21,8 @@ just bench-k6
 # クイック確認: 5 VUs / 10s
 just bench-k6-quick
 
-# 60 VUs / 30s / think 0.05 を 3 回実行して中央値を確認
-just bench-k6 60 30s 0.05 3
+# 60 VUs / 30s / think 0.05 を 5 回実行して中央値を確認
+just bench-k6 60 30s 0.05 5
 
 # 2つの結果 JSON を差分比較（mix + route）
 just bench-k6-compare bench/k6/results/base.json bench/k6/results/candidate.json auto
@@ -55,6 +55,18 @@ k6 スクリプトはデバッグ API ではなくベンチ専用 API を使い�
 
 `just bench-k6-compare` は 2 つの JSON を比較し、`p95/avg/error/rate` の差分表を表示します。
 `mode` は `mix` / `route` / `auto` から選べます。
+
+## 高負荷時のばらつき切り分け（標準手順）
+
+1. CPU 条件を固定する
+   - 同一マシン・同一電源状態で実行し、不要なバックグラウンドジョブを止める
+   - Linux では可能なら `cpupower` で governor を `performance` に固定する
+2. ウォームアップを先に実施する
+   - 計測に含めないウォームアップとして `just bench-k6-quick` を 1-2 回実行する
+3. 再計測回数を固定して本計測する
+   - 高負荷確認では `just bench-k6 60 30s 0.05 5` を基準にし、`runs=5` の中央値を採用する
+4. ばらつきが大きい場合は route profile で切り分ける
+   - `http_req_duration p95` の `max-min` が中央値の 10% を超える場合は `just bench-k6-profile 10 10s` で route 別の偏りを確認する
 
 ### パラメータ
 
