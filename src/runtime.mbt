@@ -6,11 +6,11 @@
 
 ///|
 /// Mars app type alias
-pub type App = @mars.Server
+type App = @mars.Server
 
 ///|
 /// Mars context type alias
-pub type Ctx = @mars.Context
+type Ctx = @mars.Context
 
 ///|
 /// Render a VNode to HTML string with full document wrapper

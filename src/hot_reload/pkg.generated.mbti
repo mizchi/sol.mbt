@@ -2,6 +2,8 @@
 package "mizchi/sol/hot_reload"
 
 // Values
+pub fn app_port_from_env(app_port_env? : String, default_port? : Int) -> Int
+
 pub fn client_script_from_env(hmr_port_env? : String, app_port_env? : String, default_port? : Int, offset? : Int) -> String
 
 pub fn client_script_hostname(Int) -> String
@@ -21,6 +23,8 @@ pub fn hmr_port_from_env(hmr_port_env? : String, app_port_env? : String, default
 pub fn inject_script(String, String) -> String
 
 pub fn is_dev_mode(flag_env? : String, expected? : String) -> Bool
+
+pub fn resolve_app_port(app_port~ : String?, default_port? : Int) -> Int
 
 pub fn resolve_hmr_port(hmr_port~ : String?, app_port~ : String?, default_port? : Int, offset? : Int) -> Int
 

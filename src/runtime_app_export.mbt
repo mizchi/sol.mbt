@@ -57,13 +57,6 @@ fn serve_runtime(app : App, port : Int) -> Unit {
 }
 
 ///|
-/// Serve the app using @hono/node-server
-#deprecated
-pub fn serve(app : App, port : Int) -> Unit {
-  serve_runtime(app, port)
-}
-
-///|
 extern "js" fn ffi_serve(fetch_handler : MarsFetchHandler, port : Int) -> Unit =
   #|(fetchHandler, port) => {
   #|  import('@hono/node-server').then(({ serve }) => {

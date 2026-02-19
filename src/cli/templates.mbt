@@ -160,6 +160,7 @@ pub fn template_page_with_island_moon_pkg(package_name : String) -> String {
     #|import {
     #|  "mizchi/luna/core" as @luna,
     #|  "mizchi/luna/core/signal" as @signal,
+    #|  "mizchi/mars" as @mars,
     #|  "mizchi/sol" as @sol,
     #|  "{{PACKAGE_NAME}}/client/components" as @counter,
     #|}
@@ -176,6 +177,7 @@ pub fn template_page_simple_moon_pkg() -> String {
   (
     #|import {
     #|  "mizchi/luna/core" as @luna,
+    #|  "mizchi/mars" as @mars,
     #|  "mizchi/sol" as @sol,
     #|}
     #|
@@ -191,7 +193,7 @@ pub fn template_home_page_mbt() -> String {
     #|///| Home Page
     #|
     #|///| Home page with counter component
-    #|pub fn page(_ctx : @sol.Ctx) -> @luna.Node[Unit, String] {
+    #|pub fn page(_ctx : @mars.Context) -> @luna.Node[Unit, String] {
     #|  let initial_count = 0
     #|  let state_json = "{\"count\":" + initial_count.to_string() + "}"
     #|  let count_signal = @signal.signal(initial_count)
@@ -223,7 +225,7 @@ pub fn template_about_page_mbt() -> String {
     #|///| About Page
     #|
     #|///| About page
-    #|pub fn page(_ctx : @sol.Ctx) -> @luna.Node[Unit, String] {
+    #|pub fn page(_ctx : @mars.Context) -> @luna.Node[Unit, String] {
     #|  @luna.h("div", [("class", @luna.attr_static("container"))], [
     #|    @luna.h("h1", [], [@luna.text("About")]),
     #|    @luna.h("p", [], [@luna.text("Built with MoonBit and Sol framework.")]),

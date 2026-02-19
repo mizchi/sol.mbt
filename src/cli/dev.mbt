@@ -282,8 +282,7 @@ fn[FS : @env.FileSystem] run_incremental_build_dev_with_fs(
 ///|
 /// Calculate HMR WebSocket port (main port + 100)
 fn get_hmr_port(port : String) -> Int {
-  let main_port = @strconv.parse_int(port) catch { _ => @hot_reload.default_app_port }
-  @hot_reload.default_hmr_port(main_port)
+  @hot_reload.resolve_hmr_port(hmr_port=None, app_port=Some(port))
 }
 
 ///|

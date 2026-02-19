@@ -36,6 +36,8 @@ Sol is organized around Mars as the server foundation, with these primary respon
 - **Asset loading**: Static assets and hydration loader wiring
 - **Wasm entrypoint orchestration (optional)**: `.mbtx` / `.wasm` mount manifest generation
 
+Migration guide for existing Mars users: `docs/migrate-from-mars.md`
+
 ## Quick Start
 
 ```bash

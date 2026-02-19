@@ -62,9 +62,6 @@ pub fn then(Middleware, Middleware) -> Middleware
 
 pub fn then_(Middleware, Middleware) -> Middleware
 
-#deprecated
-pub fn to_handler(Middleware) -> @mars.Handler
-
 pub fn validate_origin_middleware(Array[String]) -> Middleware
 
 // Errors

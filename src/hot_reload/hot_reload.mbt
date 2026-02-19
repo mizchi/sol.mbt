@@ -13,6 +13,15 @@ pub fn default_hmr_port(app_port : Int, offset? : Int = default_hmr_offset) -> I
 }
 
 ///|
+/// Resolve application port from raw env-like value
+pub fn resolve_app_port(
+  app_port~ : String?,
+  default_port? : Int = default_app_port,
+) -> Int {
+  parse_port_or(app_port, default_port)
+}
+
+///|
 /// Resolve HMR port from raw env-like values
 /// Priority: hmr_port -> app_port + offset -> default_app_port + offset
 pub fn resolve_hmr_port(
@@ -25,12 +34,12 @@ pub fn resolve_hmr_port(
     Some(raw_hmr) =>
       @strconv.parse_int(raw_hmr) catch {
         _ => {
-          let app = parse_port_or(app_port, default_port)
+          let app = resolve_app_port(app_port=app_port, default_port=default_port)
           default_hmr_port(app, offset=offset)
         }
       }
     None => {
-      let app = parse_port_or(app_port, default_port)
+      let app = resolve_app_port(app_port=app_port, default_port=default_port)
       default_hmr_port(app, offset=offset)
     }
   }
@@ -72,6 +81,15 @@ pub fn is_dev_mode(flag_env? : String = "SOL_DEV", expected? : String = "1") -> 
     Some(v) => v == expected
     None => false
   }
+}
+
+///|
+/// Resolve application port from environment variables
+pub fn app_port_from_env(
+  app_port_env? : String = "PORT",
+  default_port? : Int = default_app_port,
+) -> Int {
+  resolve_app_port(app_port=env_var(app_port_env), default_port=default_port)
 }
 
 ///|

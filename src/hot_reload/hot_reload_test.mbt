@@ -4,6 +4,24 @@ test "default_hmr_port: adds offset to app port" {
 }
 
 ///|
+test "resolve_app_port: parses valid port" {
+  let port = resolve_app_port(app_port=Some("3123"))
+  assert_eq(port, 3123)
+}
+
+///|
+test "resolve_app_port: falls back on invalid port" {
+  let port = resolve_app_port(app_port=Some("invalid"), default_port=8787)
+  assert_eq(port, 8787)
+}
+
+///|
+test "resolve_app_port: falls back when missing" {
+  let port = resolve_app_port(app_port=None, default_port=8787)
+  assert_eq(port, 8787)
+}
+
+///|
 test "resolve_hmr_port: HMR_PORT takes precedence" {
   let port = resolve_hmr_port(
     hmr_port=Some("24679"),

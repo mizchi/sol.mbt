@@ -20,6 +20,8 @@
 `mizchi/sol/hot_reload`:
 
 - `default_hmr_port(app_port, offset?)`
+- `resolve_app_port(app_port~, default_port?)`
+- `app_port_from_env(app_port_env?, default_port?)`
 - `resolve_hmr_port(hmr_port~, app_port~, default_port?, offset?)`
 - `hmr_port_from_env(hmr_port_env?, app_port_env?, default_port?, offset?)`
 - `is_dev_mode(flag_env?, expected?)`
@@ -32,7 +34,7 @@
 ## sol 側の利用
 
 - runtime: `src/runtime_env_mount.mbt`
-- router: `src/router/router_hmr.mbt`
+- router: `src/router/route_rendering.mbt`, `src/router/sol_routes.mbt`
 - ssg dev server: `src/cli/ssg.mbt`
 
 これにより script 文字列定義と port 解決ロジックの重複を削除した。

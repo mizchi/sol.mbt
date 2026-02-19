@@ -80,11 +80,3 @@ pub async fn run_or_500(
     }
   }
 }
-
-///|
-/// Convert Middleware to Mars Handler for interoperability
-#deprecated
-pub fn to_handler(mw : Middleware) -> @mars.Handler {
-  let Middleware(h) = mw
-  h
-}

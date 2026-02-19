@@ -27,15 +27,6 @@ fn with_created_app(callback : (App) -> Unit) -> Unit {
   })
 }
 
-///|
-/// Create a new Sol application and run callback with it
-/// This is useful for main function that cannot be async
-#deprecated
-pub fn create_app_then(callback : (App) -> Unit) -> Unit {
-  with_created_app(callback)
-}
-
-///|
 /// Run a Sol application with standard configuration
 /// This is the recommended way to start a Sol server.
 ///
@@ -46,7 +37,7 @@ pub fn create_app_then(callback : (App) -> Unit) -> Unit {
 /// }
 /// ```
 pub fn run(configure : (App) -> Unit, port? : Int) -> Unit {
-  let port = port.unwrap_or_else(get_port)
+  let port = port.unwrap_or_else(runtime_port_from_env)
   with_created_app(fn(app) {
     configure(app)
     export_runtime_app(app)
@@ -65,7 +56,7 @@ pub fn run(configure : (App) -> Unit, port? : Int) -> Unit {
 /// }
 /// ```
 pub fn run_app(create_and_configure : () -> App, port? : Int) -> Unit {
-  let port = port.unwrap_or_else(get_port)
+  let port = port.unwrap_or_else(runtime_port_from_env)
   let mode = select_bootstrap_mode(
     is_adapter=is_adapter_mode(),
     is_node=runtime_is_node(),

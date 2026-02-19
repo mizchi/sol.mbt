@@ -4,22 +4,6 @@
 // ============================================================================
 
 ///|
-extern "js" fn ffi_create_js_response(
-  body : String,
-  content_type : String,
-) -> @http.Response =
-  #| (body, contentType) => new Response(body, { headers: { 'Content-Type': contentType } })
-
-///|
-/// Create a response for static files with security headers
-extern "js" fn ffi_create_static_response(
-  body : String,
-  content_type : String,
-  cache_control : String,
-) -> @http.Response =
-  #| (body, contentType, cacheControl) => new Response(body, { headers: { 'Content-Type': contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': cacheControl } })
-
-///|
 extern "js" fn ffi_read_file_sync(path : String) -> String? =
   #| (path) => {
   #|   try {
@@ -33,31 +17,7 @@ extern "js" fn ffi_read_file_sync(path : String) -> String? =
   #| }
 
 ///|
-/// Create a text response with content type
-pub fn text_response(body : String, content_type : String) -> @http.Response {
-  ffi_create_js_response(body, content_type)
-}
-
-///|
-/// Create a JavaScript response
-pub fn js_response(body : String) -> @http.Response {
-  ffi_create_js_response(body, "application/javascript")
-}
-
-///|
-/// Create a static file response with security headers
-pub fn static_response(
-  body : String,
-  content_type : String,
-  cache_control? : String,
-) -> @http.Response {
-  let cache = cache_control.unwrap_or("max-age=3600")
-  ffi_create_static_response(body, content_type, cache)
-}
-
-///|
-/// Read file synchronously (for static file serving)
-pub fn read_file_sync(path : String) -> String? {
+fn read_file_text(path : String) -> String? {
   ffi_read_file_sync(path)
 }
 
@@ -218,7 +178,7 @@ fn serve_static_html_async(
   filename : String,
 ) -> Unit {
   let path = local_dir + "/" + filename
-  match read_file_sync(path) {
+  match read_file_text(path) {
     Some(content) => c.html(content)
     None => c.text("Not found: " + filename)
   }
@@ -234,7 +194,7 @@ fn serve_static_text_file(
 ) -> Unit {
   let path = local_dir + "/" + filename
   c.set_header("Content-Type", content_type)
-  match read_file_sync(path) {
+  match read_file_text(path) {
     Some(content) => c.text(content)
     None => c.text(not_found_body)
   }
@@ -264,7 +224,7 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
         let (url_file, local_path) = mapping
         if filename == url_file {
           let content_type = content_type_for_file(url_file)
-          match read_file_sync(local_path) {
+          match read_file_text(local_path) {
             Some(content) => {
               send_static_text(c, content, content_type, cache_ctl)
               return
@@ -287,12 +247,12 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
       let local_path = cfg.local_dir + "/" + filename
       let sol_dev_path = ".sol/dev/static/" + filename
       let sol_prod_path = ".sol/prod/static/" + filename
-      let content = match read_file_sync(local_path) {
+      let content = match read_file_text(local_path) {
         Some(c) => Some(c)
         None =>
-          match read_file_sync(sol_dev_path) {
+          match read_file_text(sol_dev_path) {
             Some(c) => Some(c)
-            None => read_file_sync(sol_prod_path)
+            None => read_file_text(sol_prod_path)
           }
       }
       match content {

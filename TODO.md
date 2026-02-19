@@ -72,8 +72,19 @@
   対応: `create_app_then` / `serve` の内部実装を分離し、内部呼び出しから deprecated シンボルを除去
 - [x] [P3] static css/js 配信ロジックの重複削減  
   対応: `serve_static_text_file` へ統合
+- [x] [P2] `mars` ユーザー向け段階移行ガイドを整備  
+  対応: `docs/migrate-from-mars.md` を追加し、README から導線を追加
 
 ## 次の候補（未着手）
 
-- [ ] [P2] `runtime_env_mount` の `get_hmr_script` / `get_hmr_port` を deprecated 化し `@hot_reload` 直接利用へ寄せる
-- [ ] [P2] `runtime_static_serving` の `text_response` / `js_response` / `static_response` の使用実態を確認し、不要公開 API を縮小する
+- [x] [P2] `runtime_env_mount` の `get_hmr_script` / `get_hmr_port` を deprecated 化し `@hot_reload` 直接利用へ寄せる  
+  対応: `get_port` を `@hot_reload.app_port_from_env` に統一し、`get_hmr_script` / `get_hmr_port` / `set_env` は互換維持のまま deprecated 化
+- [x] [P2] `runtime_static_serving` の `text_response` / `js_response` / `static_response` の使用実態を確認し、不要公開 API を縮小する  
+  対応: 3 API と `read_file_sync` を deprecated 化し、内部は `read_file_text` に移行して警告なしで互換維持
+
+## 物理削除（breaking）
+
+- [x] [P1] deprecated 公開APIの物理削除  
+  対応: `create_app_then` / `serve` / `get_hmr_script` / `get_hmr_port` / `set_env` / `text_response` / `js_response` / `static_response` / `read_file_sync` / `middleware.to_handler` / `get_port` を削除
+- [x] [P1] `@sol.App` / `@sol.Ctx` の公開型エイリアスを削除  
+  対応: `@mars.Server` / `@mars.Context` 直接利用へ統一し、テンプレートと移行ドキュメントを更新
