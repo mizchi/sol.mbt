@@ -10,7 +10,9 @@
     "test": "moon test --target js",
     "test:e2e": "pnpm playwright test --config e2e/playwright.config.mts",
     "check": "moon check",
-    "build": "moon build --target js"
+    "build": "moon build --target js",
+    "bench:k6": "just bench-k6",
+    "bench:k6:quick": "just bench-k6-quick"
   },
   "devDependencies": {
     "@hono/node-server": "^1.19.9",

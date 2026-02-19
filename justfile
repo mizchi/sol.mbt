@@ -190,6 +190,33 @@ bench-server:
     done
     echo "✓ Benchmark completed"
 
+# k6 ベンチマーク (examples/sol_app)
+bench-k6 vus="20" duration="30s" think_time="0.1":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just build-moon
+    cd examples/sol_app
+    node ../../target/js/debug/build/cli/cli.js build
+    PORT=7777 node ../../target/js/debug/build/cli/cli.js serve > /tmp/sol-bench-k6.log 2>&1 &
+    SERVER_PID=$!
+    trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+
+    for _ in {1..30}; do
+        if curl -fsS "http://localhost:7777/api/health" > /dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+    curl -fsS "http://localhost:7777/api/health" > /dev/null 2>&1
+
+    cd ../..
+    BASE_URL="http://localhost:7777" VUS="{{vus}}" DURATION="{{duration}}" THINK_TIME="{{think_time}}" k6 run bench/k6/sol-app-mix.js
+    echo "✓ k6 benchmark completed"
+
+# k6 クイックベンチマーク
+bench-k6-quick:
+    @just bench-k6 5 10s 0.05
+
 # =============================================================================
 # カバレッジ
 # =============================================================================
