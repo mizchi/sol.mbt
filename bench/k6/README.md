@@ -43,8 +43,12 @@ BASE_URL=http://localhost:7777 VUS=10 DURATION=10s k6 run bench/k6/sol-app-route
 ```
 
 `examples/sol_app` では `SOL_BENCH_MODE=1` を付けてサーバーを起動すると、
-logger ミドルウェアを無効化し、デバッグ API（`/api/middleware-test`, `/api/test/[...path]`）の
-レスポンスを最小化して純粋なレスポンス性能を測れます。
+logger ミドルウェアを無効化して純粋なレスポンス性能を測れます。
+
+k6 スクリプトはデバッグ API ではなくベンチ専用 API を使います。
+
+- `/api/bench/ping`
+- `/api/bench/test/[...path]`
 
 `just bench-k6` は `runs > 1` を指定すると、各 run の JSON を保存し、
 最後に `bench/k6/summarize-results.js` で中央値を集計します。

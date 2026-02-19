@@ -138,6 +138,16 @@ pub fn routes() -> Array[@router.SolRoutes] {
               path="/api/health",
               handler=@router.ApiHandler(api_health),
             ),
+            // Benchmark API - lightweight endpoint for k6 runs
+            @router.SolRoutes::Get(
+              path="/api/bench/ping",
+              handler=@router.ApiHandler(api_bench_ping),
+            ),
+            // Benchmark API - catch-all endpoint for routing benchmarks
+            @router.SolRoutes::Get(
+              path="/api/bench/test/[...path]",
+              handler=@router.ApiHandler(api_bench_catch_all),
+            ),
             // Middleware test API - returns info about current request
             @router.SolRoutes::Get(
               path="/api/middleware-test",
@@ -169,10 +179,6 @@ extern "js" fn is_bench_mode() -> Bool =
 /// Debug API - returns catch-all params
 async fn api_test_catch_all(props : @router.PageProps) -> @core.Any {
   let path = props.params.get_param("path").unwrap_or("(none)")
-  if is_bench_mode() {
-    // Keep benchmark API payload minimal to focus on routing/rendering overhead.
-    return @sol.json_obj([("path", @core.any(path))])
-  }
   let star = props.params.get_param("*").unwrap_or("(none)")
   let all_params = props.params.params.map(fn(p) { p.0 + "=" + p.1 }).join(",")
   @sol.json_obj([
@@ -186,6 +192,19 @@ async fn api_test_catch_all(props : @router.PageProps) -> @core.Any {
 /// API handler: health check
 async fn api_health(_props : @router.PageProps) -> @core.Any {
   @sol.json_obj([("status", @core.any("ok"))])
+}
+
+///|
+/// API handler: benchmark ping (lightweight)
+async fn api_bench_ping(_props : @router.PageProps) -> @core.Any {
+  @sol.json_obj([("ok", @core.any(true))])
+}
+
+///|
+/// API handler: benchmark catch-all (lightweight)
+async fn api_bench_catch_all(props : @router.PageProps) -> @core.Any {
+  let path = props.params.get_param("path").unwrap_or("(none)")
+  @sol.json_obj([("path", @core.any(path))])
 }
 
 // ============================================================================
@@ -274,10 +293,6 @@ pub fn action_registry() -> @action.ActionRegistry {
 ///|
 /// API handler: middleware test - returns request info
 async fn api_middleware_test(_props : @router.PageProps) -> @core.Any {
-  if is_bench_mode() {
-    // Keep benchmark API payload minimal to focus on routing/rendering overhead.
-    return @sol.json_obj([("middleware", @core.any("bench"))])
-  }
   @sol.json_obj([
     ("middleware", @core.any("logger >> cors")),
     ("timestamp", @core.any(get_timestamp())),

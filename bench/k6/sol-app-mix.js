@@ -23,8 +23,8 @@ const PAGE_ROUTES = [
 
 const API_ROUTES = [
   "/api/health",
-  "/api/middleware-test",
-  "/api/test/users",
+  "/api/bench/ping",
+  "/api/bench/test/users",
 ];
 
 export const options = {

@@ -35,9 +35,9 @@ just bench-k6-compare bench/k6/results/base.json bench/k6/results/candidate.json
 このモードではベンチノイズ削減のため、以下の振る舞いに固定します。
 
 - logger middleware を無効化
-- デバッグ API のレスポンスを最小化
-  - `/api/middleware-test`
-  - `/api/test/[...path]`
+- k6 はベンチ専用 API を使用
+  - `/api/bench/ping`
+  - `/api/bench/test/[...path]`
 
 本番挙動の検証ではなく、ルーティング/レンダリング性能の相対比較が目的です。
 

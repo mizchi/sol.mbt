@@ -105,8 +105,8 @@
 - [x] [P2] `SOL_BENCH_MODE` の挙動説明を docs 側にも統一して反映する  
   対応: `docs/benchmarking.md` を単一ソースとして追加し、`README.md` / `bench/k6/README.md` から参照
 
-- [ ] [P2] `examples/sol_app` のベンチ用途 API をデバッグ用途 API から分離する  
-  対応案: `/api/bench/*` 系エンドポイントを追加し、k6 はそちらを使う
+- [x] [P2] `examples/sol_app` のベンチ用途 API をデバッグ用途 API から分離する  
+  対応: `/api/bench/*` 系エンドポイントを追加し、k6 はベンチ専用 API を使用
 
 - [ ] [P3] 高負荷時のばらつき切り分け手順を文書化する  
   対応案: CPU 固定、ウォームアップ、再計測回数の標準手順を `bench/k6/README.md` に追加する

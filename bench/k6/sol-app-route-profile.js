@@ -18,8 +18,8 @@ const ROUTES = [
   { key: "page_docs", path: "/docs/getting-started", expect: "html", trend: new Trend("page_docs_duration") },
   { key: "page_blog", path: "/blog/2024", expect: "html", trend: new Trend("page_blog_duration") },
   { key: "api_health", path: "/api/health", expect: "json", trend: new Trend("api_health_duration") },
-  { key: "api_middleware", path: "/api/middleware-test", expect: "json", trend: new Trend("api_middleware_duration") },
-  { key: "api_catch_all", path: "/api/test/users", expect: "json", trend: new Trend("api_catch_all_duration") },
+  { key: "api_middleware", path: "/api/bench/ping", expect: "json", trend: new Trend("api_middleware_duration") },
+  { key: "api_catch_all", path: "/api/bench/test/users", expect: "json", trend: new Trend("api_catch_all_duration") },
 ];
 
 export const options = {
