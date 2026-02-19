@@ -88,3 +88,25 @@
   対応: `create_app_then` / `serve` / `get_hmr_script` / `get_hmr_port` / `set_env` / `text_response` / `js_response` / `static_response` / `read_file_sync` / `middleware.to_handler` / `get_port` を削除
 - [x] [P1] `@sol.App` / `@sol.Ctx` の公開型エイリアスを削除  
   対応: `@mars.Server` / `@mars.Context` 直接利用へ統一し、テンプレートと移行ドキュメントを更新
+
+## 追加で潰した項目（2026-02-19）
+
+- [x] [P3] k6 benchmark mode でデバッグ API 応答を最小化して計測ノイズを削減  
+  対応: `SOL_BENCH_MODE=1` 時は `/api/middleware-test` と `/api/test/[...path]` のレスポンスを軽量化
+
+## 次フェーズ（未着手）
+
+- [x] [P1] k6 計測を「複数回実行 + median 採用」に標準化する  
+  対応: `just bench-k6` に `runs` 引数を追加し、`bench/k6/summarize-results.js` で中央値を集計
+
+- [ ] [P1] route profile と mix profile の差分レポートを自動生成する  
+  対応案: `bench/k6/compare.js` を追加し、`p95/avg/error/rate` の差分表を出力する
+
+- [ ] [P2] `SOL_BENCH_MODE` の挙動説明を docs 側にも統一して反映する  
+  対応案: `docs/` のベンチ手順を `bench/k6/README.md` と同じ説明に合わせる
+
+- [ ] [P2] `examples/sol_app` のベンチ用途 API をデバッグ用途 API から分離する  
+  対応案: `/api/bench/*` 系エンドポイントを追加し、k6 はそちらを使う
+
+- [ ] [P3] 高負荷時のばらつき切り分け手順を文書化する  
+  対応案: CPU 固定、ウォームアップ、再計測回数の標準手順を `bench/k6/README.md` に追加する

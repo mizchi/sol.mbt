@@ -18,6 +18,9 @@ just bench-k6
 
 # クイック確認: 5 VUs / 10s
 just bench-k6-quick
+
+# 60 VUs / 30s / think 0.05 を 3 回実行して中央値を確認
+just bench-k6 60 30s 0.05 3
 ```
 
 ## 単体実行
@@ -38,10 +41,15 @@ BASE_URL=http://localhost:7777 VUS=10 DURATION=10s k6 run bench/k6/sol-app-route
 logger ミドルウェアを無効化し、デバッグ API（`/api/middleware-test`, `/api/test/[...path]`）の
 レスポンスを最小化して純粋なレスポンス性能を測れます。
 
+`just bench-k6` は `runs > 1` を指定すると、各 run の JSON を保存し、
+最後に `bench/k6/summarize-results.js` で中央値を集計します。
+
 ### パラメータ
 
 - `BASE_URL` (default: `http://localhost:7777`)
 - `VUS` (default: `20`)
 - `DURATION` (default: `30s`)
 - `THINK_TIME` (default: `0.1`)
-- `RESULTS_JSON` (optional, 例: `bench/k6/results/latest.json`)
+- `runs` (`just bench-k6` 第4引数, default: `1`)
+- `RESULTS_JSON` (optional, `runs=1` のときのみ有効)
+- `RESULTS_JSON_BASE` (optional, `runs>1` のときの出力先プレフィックス。例: `bench/k6/results/high_load`)

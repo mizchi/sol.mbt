@@ -191,7 +191,7 @@ bench-server:
     echo "✓ Benchmark completed"
 
 # k6 ベンチマーク (examples/sol_app)
-bench-k6 vus="20" duration="30s" think_time="0.1":
+bench-k6 vus="20" duration="30s" think_time="0.1" runs="1":
     #!/usr/bin/env bash
     set -euo pipefail
     just build-moon
@@ -210,7 +210,36 @@ bench-k6 vus="20" duration="30s" think_time="0.1":
     curl -fsS "http://localhost:7777/api/health" > /dev/null 2>&1
 
     cd ../..
-    BASE_URL="http://localhost:7777" VUS="{{vus}}" DURATION="{{duration}}" THINK_TIME="{{think_time}}" k6 run bench/k6/sol-app-mix.js
+    RUNS="{{runs}}"
+    if ! [[ "$RUNS" =~ ^[0-9]+$ ]] || [ "$RUNS" -lt 1 ]; then
+        echo "ERROR: runs must be an integer >= 1 (got: $RUNS)" >&2
+        exit 1
+    fi
+
+    RESULT_FILES=()
+    for i in $(seq 1 "$RUNS"); do
+        if [ "$RUNS" -eq 1 ]; then
+            RUN_RESULT_JSON="${RESULTS_JSON:-bench/k6/results/latest.json}"
+        else
+            RUN_RESULT_BASE="${RESULTS_JSON_BASE:-bench/k6/results/latest}"
+            RUN_RESULT_JSON="${RUN_RESULT_BASE}_run${i}.json"
+        fi
+
+        mkdir -p "$(dirname "$RUN_RESULT_JSON")"
+        echo "=== k6 run ${i}/${RUNS} ==="
+        BASE_URL="http://localhost:7777" \
+        VUS="{{vus}}" \
+        DURATION="{{duration}}" \
+        THINK_TIME="{{think_time}}" \
+        RESULTS_JSON="$RUN_RESULT_JSON" \
+        k6 run bench/k6/sol-app-mix.js
+        RESULT_FILES+=("$RUN_RESULT_JSON")
+    done
+
+    if [ "$RUNS" -gt 1 ]; then
+        node bench/k6/summarize-results.js "${RESULT_FILES[@]}"
+    fi
+
     echo "✓ k6 benchmark completed"
 
 # k6 クイックベンチマーク
