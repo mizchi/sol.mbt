@@ -2,6 +2,8 @@
 
 `k6` で `examples/sol_app` の主要ルートを負荷計測するためのスクリプトです。
 
+仕様の単一ソース: `docs/benchmarking.md`
+
 ## 前提
 
 ```bash

@@ -253,6 +253,7 @@ pub fn config() -> @router.RouterConfig {
 `Layout` の適用ルールと `source_path` の動的パラメータ形式はこのドキュメントを参照してください。
 
 Hot Reload 共通設計: `docs/hot-reload.md`
+Benchmark 手順と `SOL_BENCH_MODE` 仕様: `docs/benchmarking.md`
 
 ## Middleware
 

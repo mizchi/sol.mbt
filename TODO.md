@@ -102,8 +102,8 @@
 - [x] [P1] route profile と mix profile の差分レポートを自動生成する  
   対応: `bench/k6/compare.js` と `just bench-k6-compare` を追加し、`p95/avg/error/rate` 差分表を出力
 
-- [ ] [P2] `SOL_BENCH_MODE` の挙動説明を docs 側にも統一して反映する  
-  対応案: `docs/` のベンチ手順を `bench/k6/README.md` と同じ説明に合わせる
+- [x] [P2] `SOL_BENCH_MODE` の挙動説明を docs 側にも統一して反映する  
+  対応: `docs/benchmarking.md` を単一ソースとして追加し、`README.md` / `bench/k6/README.md` から参照
 
 - [ ] [P2] `examples/sol_app` のベンチ用途 API をデバッグ用途 API から分離する  
   対応案: `/api/bench/*` 系エンドポイントを追加し、k6 はそちらを使う
