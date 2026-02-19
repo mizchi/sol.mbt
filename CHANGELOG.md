@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2026-02-19
+
+### Changed
+
+- Upgrade `mizchi/mars` dependency to `0.3.9`
+- Align example modules to `mizchi/mars` `0.3.9`
+
 ## [0.2.0] - 2026-01-13
 
 ### Added
