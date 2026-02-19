@@ -252,6 +252,10 @@ bench-k6-profile vus="10" duration="10s":
     set -euo pipefail
     BASE_URL="http://localhost:7777" VUS="{{vus}}" DURATION="{{duration}}" THINK_TIME=0.02 k6 run bench/k6/sol-app-route-profile.js
 
+# k6 結果比較（mix / route / auto）
+bench-k6-compare baseline candidate mode="auto":
+    node bench/k6/compare.js "{{baseline}}" "{{candidate}}" "{{mode}}"
+
 # =============================================================================
 # カバレッジ
 # =============================================================================

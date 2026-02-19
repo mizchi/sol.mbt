@@ -99,8 +99,8 @@
 - [x] [P1] k6 計測を「複数回実行 + median 採用」に標準化する  
   対応: `just bench-k6` に `runs` 引数を追加し、`bench/k6/summarize-results.js` で中央値を集計
 
-- [ ] [P1] route profile と mix profile の差分レポートを自動生成する  
-  対応案: `bench/k6/compare.js` を追加し、`p95/avg/error/rate` の差分表を出力する
+- [x] [P1] route profile と mix profile の差分レポートを自動生成する  
+  対応: `bench/k6/compare.js` と `just bench-k6-compare` を追加し、`p95/avg/error/rate` 差分表を出力
 
 - [ ] [P2] `SOL_BENCH_MODE` の挙動説明を docs 側にも統一して反映する  
   対応案: `docs/` のベンチ手順を `bench/k6/README.md` と同じ説明に合わせる
