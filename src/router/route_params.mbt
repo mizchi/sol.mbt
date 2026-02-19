@@ -173,6 +173,7 @@ fn extract_route_params(
   is_fragment? : Bool = false,
   param_names? : Array[String] = [],
 ) -> RouteParams {
+  let path = c.path()
   let params : Array[(String, String)] = []
   // Use Mars public API (`Context::param`) to extract known route params.
   for name in param_names {
@@ -184,12 +185,23 @@ fn extract_route_params(
 
   // Get query params
   let query : Array[(String, String)] = []
-  for entry in c.queries() {
-    query.push((entry.0, entry.1))
+  if has_query_string(path) {
+    for entry in c.queries() {
+      query.push((entry.0, entry.1))
+    }
   }
 
-  let path = c.path()
   { params, query, path, is_fragment, url_pattern_result: None }
+}
+
+///|
+fn has_query_string(path : String) -> Bool {
+  for c in path {
+    if c == '?' {
+      return true
+    }
+  }
+  false
 }
 
 ///|
