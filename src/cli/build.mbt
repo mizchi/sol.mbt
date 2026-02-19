@@ -20,7 +20,7 @@ fn show_build_help() -> Unit {
     #|Options:
     #|  --target <target>   Build target (js, wasm) (default: js)
     #|  --skip-bundle       Skip rolldown bundling
-    #|  --skip-generate     Skip _sol directory generation
+    #|  --skip-generate     Skip .sol directory generation
     #|  --skip-minify       Skip minification
     #|  --clean             Clean _build/target and .sol directories before build
     #|  --parallel          Enable parallel SSG build
@@ -274,7 +274,7 @@ async fn[FS : @env.FileSystem] run_build_command_with_fs(
   }
   // Run generate if sol.config.json exists
   if not(skip_generate) && has_sol_config {
-    println(@colorette.cyan("Generating _sol directory..."))
+    println(@colorette.cyan("Generating .sol directory..."))
     run_generate_command(["--mode", "prod"])
   }
   println(@colorette.cyan("Building for production (target: \{target})..."))

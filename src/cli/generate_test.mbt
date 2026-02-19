@@ -1024,3 +1024,109 @@ test "WasmEntrypointBuildOptions::for_cli maps legacy flags" {
   assert_eq(opts.emit_env_json, true)
   assert_eq(opts.write_if_changed, true)
 }
+
+///|
+fn find_template_content(
+  templates : Array[TemplateFile],
+  path : String,
+) -> String? {
+  for file in templates {
+    if file.path == path {
+      return Some(file.content)
+    }
+  }
+  None
+}
+
+///|
+test "generate_templates: moon.mod.json includes sol and mars dependencies" {
+  let templates = generate_templates("tester/myapp", "myapp", None)
+  let content = find_template_content(templates, "moon.mod.json").unwrap_or("")
+  assert_true(content.contains("\"mizchi/sol\""))
+  assert_true(content.contains("\"mizchi/mars\""))
+  assert_true(content.contains("\"mizchi/signals\""))
+}
+
+///|
+test "template_layout_mbt: provides root_layout used by routes template" {
+  let content = template_layout_mbt()
+  assert_true(content.contains("pub fn root_layout("))
+}
+
+///|
+test "template_layout_moon_pkg: uses current static dom package path" {
+  let content = template_layout_moon_pkg()
+  assert_true(content.contains("\"mizchi/luna/dom/static\" as @server_dom"))
+}
+
+///|
+test "template_gen_types_mbt: includes counter component ref factory" {
+  let content = template_gen_types_mbt()
+  assert_true(content.contains("pub fn counter("))
+}
+
+///|
+test "template_gen_types_moon_pkg: imports luna for ComponentRef types" {
+  let content = template_gen_types_moon_pkg()
+  assert_true(content.contains("\"mizchi/luna\" as @luna"))
+}
+
+///|
+test "template_ln_loader_js: scans luna:id selector" {
+  let content = template_ln_loader_js()
+  assert_true(content.contains("[luna\\\\:id]"))
+  assert_true(not(content.contains("[ln\\\\:id]")))
+}
+
+///|
+test "generate_templates: package.json includes dev/build/serve scripts" {
+  let templates = generate_templates("tester/myapp", "myapp", None)
+  let content = find_template_content(templates, "package.json").unwrap_or("")
+  assert_true(content.contains("\"scripts\""))
+  assert_true(content.contains("\"dev\""))
+  assert_true(content.contains("\"build\""))
+  assert_true(content.contains("\"serve\""))
+}
+
+///|
+test "generate_templates: uses flat app/client package layout" {
+  let templates = generate_templates("tester/myapp", "myapp", None)
+  let mut has_flat_client_pkg = false
+  let mut has_nested_client_pkg = false
+  let mut has_flat_client_mbt = false
+  for file in templates {
+    if file.path == "app/client/moon.pkg" {
+      has_flat_client_pkg = true
+    }
+    if file.path == "app/client/counter.mbt" {
+      has_flat_client_mbt = true
+    }
+    if file.path == "app/client/counter/moon.pkg" {
+      has_nested_client_pkg = true
+    }
+  }
+  assert_true(has_flat_client_pkg)
+  assert_true(has_flat_client_mbt)
+  assert_true(not(has_nested_client_pkg))
+}
+
+///|
+test "template_client_counter_moon_pkg: uses current luna/signals imports" {
+  let content = template_client_counter_moon_pkg()
+  assert_true(content.contains("\"mizchi/luna/dom\" as @element"))
+  assert_true(content.contains("\"mizchi/signals\" as @signal"))
+}
+
+///|
+test "template_client_counter_mbt: uses modern using syntax" {
+  let content = template_client_counter_mbt()
+  assert_true(content.contains("using @element {"))
+  assert_true(content.contains("text_of"))
+  assert_true(not(content.contains("using @element.{")))
+}
+
+///|
+test "template_routes_moon_pkg: uses current static dom package path" {
+  let content = template_routes_moon_pkg("tester/myapp")
+  assert_true(content.contains("\"mizchi/luna/dom/static\" as @server_dom"))
+}
