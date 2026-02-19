@@ -30,14 +30,14 @@ myapp/
 ├── sol.config.json         # Sol設定
 ├── app/
 │   ├── server/             # サーバーコンポーネント
-│   │   ├── moon.pkg.json
+│   │   ├── moon.pkg
 │   │   └── routes.mbt      # routes() + config() + ページ
 │   ├── client/             # クライアントコンポーネント (Islands)
-│   │   └── counter/
-│   │       └── counter.mbt
+│   │   ├── moon.pkg
+│   │   └── counter.mbt
 │   └── __gen__/            # 自動生成 (sol generate)
 └── static/
-    └── loader.min.js       # Islandローダー
+    └── loader.js           # Islandローダー
 ```
 
 ## CLIリファレンス
@@ -60,7 +60,7 @@ sol new myapp --user mizchi --dev   # ローカル luna パスを使用
 4. サーバー起動
 
 ```bash
-sol dev              # デフォルトポート 3000
+sol dev              # デフォルトポート 7777
 sol dev --port 8080  # ポート指定
 sol dev --clean      # キャッシュクリアしてビルド
 ```
@@ -80,7 +80,7 @@ sol build --clean         # キャッシュクリアしてビルド
 本番ビルドを配信。`sol build`が必要。
 
 ```bash
-sol serve              # デフォルトポート 3000
+sol serve              # デフォルトポート 7777
 sol serve --port 8080  # ポート指定
 ```
 
@@ -172,7 +172,7 @@ let submit_handler = @action.ActionHandler(async fn(ctx) {
 })
 
 pub fn action_registry() -> @action.ActionRegistry {
-  @action.ActionRegistry::new(allowed_origins=["http://localhost:3000"])
+  @action.ActionRegistry::new(allowed_origins=["http://localhost:7777"])
     .register(@action.ActionDef::new("submit-form", submit_handler))
 }
 ```
@@ -194,7 +194,7 @@ Islandはサーバーとクライアントで共有されるコンポーネン�
 ```moonbit
 pub fn counter(count : @signal.Signal[Int]) -> @luna.Node[CounterAction] {
   div(class="counter", [
-    span(class="count-display", [text_signal(count)]),
+    span(class="count-display", [text_of(count)]),
     button(onclick=@luna.action(Increment), [text("+")]),
   ])
 }
