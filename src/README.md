@@ -151,7 +151,7 @@ sol generate --mode prod        # Production mode (outputs to .sol/prod/)
 Delete generated files and cache.
 
 ```bash
-sol clean  # Delete .sol/, app/__gen__/, target/
+sol clean  # Delete .sol/, app/__gen__/, _build/
 ```
 
 ## SolRoutes Definition

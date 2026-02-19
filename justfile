@@ -23,7 +23,7 @@ watch:
 # クリーン
 clean:
     moon clean
-    rm -rf target .turbo/cache
+    rm -rf _build target .turbo/cache
 
 # =============================================================================
 # ビルド
@@ -32,7 +32,7 @@ clean:
 # MoonBit ビルド
 build-moon:
     moon build --target js
-    @rm -f target/js/debug/build/package.json
+    @rm -f _build/js/debug/build/package.json
 
 # MoonBit デバッグビルド（ソースマップ付き）
 build-debug:
@@ -52,8 +52,8 @@ test: _setup-test-env
 
 # moon test 用 CommonJS 環境セットアップ
 _setup-test-env:
-    @mkdir -p target/js/debug/test
-    @echo '{"type": "commonjs"}' > target/js/debug/test/package.json
+    @mkdir -p _build/js/debug/test
+    @echo '{"type": "commonjs"}' > _build/js/debug/test/package.json
 
 # SSG テスト
 test-ssg: _setup-test-env
@@ -77,7 +77,11 @@ test-e2e-ui:
 test-sol-app:
     cd examples/sol_app && pnpm test
 
-test-all: test test-ssg test-xplat test-e2e test-sol-app
+# docs 整合テスト
+test-docs:
+    node --test docs/docs-index.test.js docs/docs-chapters.test.js docs/docs-build-paths.test.js docs/docs-ci.test.js
+
+test-all: test test-ssg test-xplat test-docs test-e2e test-sol-app
 
 # =============================================================================
 # CLI
@@ -86,7 +90,7 @@ test-all: test test-ssg test-xplat test-e2e test-sol-app
 # Sol CLI
 sol *args:
     @just build-moon
-    node target/js/debug/build/cli/cli.js {{args}}
+    node _build/js/debug/build/cli/cli.js {{args}}
 
 # =============================================================================
 # Examples
@@ -95,7 +99,7 @@ sol *args:
 # sol_app 開発サーバー（フレームワークホットリロード付き）
 dev-app:
     just build-moon
-    cd examples/sol_app && node ../../target/js/debug/build/cli/cli.js dev -f
+    cd examples/sol_app && node ../../_build/js/debug/build/cli/cli.js dev -f
 
 # examples のキャッシュクリーン
 clean-examples:
@@ -149,17 +153,17 @@ check-examples: check-example-sol-app check-example-sol-auth check-example-sol-b
 # docs 開発サーバー
 dev-doc:
     just build-moon
-    cd website && node ../target/js/debug/build/cli/cli.js dev
+    cd website && node ../_build/js/debug/build/cli/cli.js dev
 
 # docs ビルド
 build-doc *args:
     just build-moon
-    node target/js/debug/build/cli/cli.js build {{args}}
+    node _build/js/debug/build/cli/cli.js build {{args}}
 
 # docs lint
 lint-doc:
     just build-moon
-    node target/js/debug/build/cli/cli.js lint
+    node _build/js/debug/build/cli/cli.js lint
 
 # docs プレビュー
 preview-doc:
@@ -196,8 +200,8 @@ bench-k6 vus="20" duration="30s" think_time="0.1" runs="1":
     set -euo pipefail
     just build-moon
     cd examples/sol_app
-    node ../../target/js/debug/build/cli/cli.js build
-    SOL_BENCH_MODE=1 PORT=7777 node ../../target/js/debug/build/cli/cli.js serve > /tmp/sol-bench-k6.log 2>&1 &
+    node ../../_build/js/debug/build/cli/cli.js build
+    SOL_BENCH_MODE=1 PORT=7777 node ../../_build/js/debug/build/cli/cli.js serve > /tmp/sol-bench-k6.log 2>&1 &
     SERVER_PID=$!
     trap "kill $SERVER_PID 2>/dev/null || true" EXIT
 
@@ -262,7 +266,7 @@ bench-k6-compare baseline candidate mode="auto":
 
 # MoonBit カバレッジ
 coverage:
-    rm -f target/moonbit_coverage_*.txt
+    rm -f _build/moonbit_coverage_*.txt
     moon test --target js --enable-coverage
     moon coverage report -f summary
 
@@ -276,7 +280,7 @@ coverage-clean:
 # =============================================================================
 
 # CI チェック
-ci: check test check-examples
+ci: check test test-docs check-examples
     @echo "✓ All CI checks passed"
 
 # =============================================================================

@@ -11,7 +11,7 @@ Used for prototyping new features, integration testing, and implementation verif
 ```bash
 # Start development server in playground
 cd examples/sol_app
-npm install
+pnpm install
 just sol dev
 ```
 
@@ -37,6 +37,9 @@ Sol is organized around Mars as the server foundation, with these primary respon
 - **Wasm entrypoint orchestration (optional)**: `.mbtx` / `.wasm` mount manifest generation
 
 Migration guide for existing Mars users: `docs/migrate-from-mars.md`
+Documentation guide: `docs/README.md`
+Quickstart guide: `docs/quickstart.md`
+Troubleshooting guide: `docs/troubleshooting.md`
 
 ## Quick Start
 
@@ -46,10 +49,10 @@ sol new myapp --user yourname
 cd myapp
 
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 ```
 
 ## Configuration
@@ -172,7 +175,7 @@ sol generate --mode prod        # Production mode (outputs to .sol/prod/)
 Delete generated files and cache.
 
 ```bash
-sol clean  # Delete .sol/, app/__gen__/, target/
+sol clean  # Delete .sol/, app/__gen__/, _build/
 ```
 
 ## SolRoutes Definition

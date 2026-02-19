@@ -67,7 +67,7 @@
 - [x] [P3] HMR メッセージ型の導入と timestamp overflow 修正  
   対応: `HmrMessage` を追加し、`notify_update` の timestamp を `Double` で送信
 - [x] [P3] `just sol` の CLI エントリパス不整合を修正  
-  対応: `justfile` の参照先を `target/js/debug/build/cli/cli.js` に統一
+  対応: `justfile` の参照先を `_build/js/debug/build/cli/cli.js` に統一
 - [x] [P3] deprecated warning の解消  
   対応: `create_app_then` / `serve` の内部実装を分離し、内部呼び出しから deprecated シンボルを除去
 - [x] [P3] static css/js 配信ロジックの重複削減  
@@ -110,3 +110,17 @@
 
 - [x] [P3] 高負荷時のばらつき切り分け手順を文書化する  
   対応: CPU 固定、ウォームアップ、再計測回数（`runs=5`）とばらつき判定基準を `bench/k6/README.md` / `docs/benchmarking.md` に追加
+
+## レビュー起点の改善（2026-02-19）
+
+- [x] [P2] docs 整合テストを `just` / `ci` に組み込む  
+  対応: `test-docs` ターゲットを追加し、`ci` / `test-all` と `.github/workflows/check.yaml` に組み込み（`docs-index` / `docs-chapters` / `docs-ci`）
+
+- [x] [P3] ルート README の Quick Start を scaffold 前提（`pnpm install` / `pnpm dev`）に統一する  
+  対応: Playground と Quick Start の依存導入/起動コマンドを `pnpm` ベースへ統一
+
+- [x] [P2] GitHub Actions の build 出力パス（`_build`）とローカル開発（`target`）の整合を確認し統一する  
+  対応: `justfile` / `check.yaml` / `README` / `src/cli` / `src/ssg` / `examples/sol_auth` の参照を `_build` 基準に統一し、`target` は互換 cleanup のみ維持
+
+- [x] [P1] `sol clean --all` と `sol dev --clean` で `target -> _build` 環境の cleanup 順序を修正する  
+  対応: legacy `target` を先に削除してから `_build` を削除する順序に統一し、壊れ symlink 残留リスクを除去

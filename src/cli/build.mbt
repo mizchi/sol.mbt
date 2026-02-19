@@ -22,7 +22,7 @@ fn show_build_help() -> Unit {
     #|  --skip-bundle       Skip rolldown bundling
     #|  --skip-generate     Skip .sol directory generation
     #|  --skip-minify       Skip minification
-    #|  --clean             Clean _build/target and .sol directories before build
+    #|  --clean             Clean _build and .sol directories before build
     #|  --parallel          Enable parallel SSG build
     #|  --workers <n>       Number of parallel workers (default: 4)
     #|  --force             Force rebuild (ignore cache)
