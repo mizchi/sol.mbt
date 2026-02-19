@@ -35,7 +35,8 @@ BASE_URL=http://localhost:7777 VUS=10 DURATION=10s k6 run bench/k6/sol-app-route
 ```
 
 `examples/sol_app` では `SOL_BENCH_MODE=1` を付けてサーバーを起動すると、
-logger ミドルウェアを無効化して純粋なレスポンス性能を測れます。
+logger ミドルウェアを無効化し、デバッグ API（`/api/middleware-test`, `/api/test/[...path]`）の
+レスポンスを最小化して純粋なレスポンス性能を測れます。
 
 ### パラメータ
 

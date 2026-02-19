@@ -169,6 +169,10 @@ extern "js" fn is_bench_mode() -> Bool =
 /// Debug API - returns catch-all params
 async fn api_test_catch_all(props : @router.PageProps) -> @core.Any {
   let path = props.params.get_param("path").unwrap_or("(none)")
+  if is_bench_mode() {
+    // Keep benchmark API payload minimal to focus on routing/rendering overhead.
+    return @sol.json_obj([("path", @core.any(path))])
+  }
   let star = props.params.get_param("*").unwrap_or("(none)")
   let all_params = props.params.params.map(fn(p) { p.0 + "=" + p.1 }).join(",")
   @sol.json_obj([
@@ -270,6 +274,10 @@ pub fn action_registry() -> @action.ActionRegistry {
 ///|
 /// API handler: middleware test - returns request info
 async fn api_middleware_test(_props : @router.PageProps) -> @core.Any {
+  if is_bench_mode() {
+    // Keep benchmark API payload minimal to focus on routing/rendering overhead.
+    return @sol.json_obj([("middleware", @core.any("bench"))])
+  }
   @sol.json_obj([
     ("middleware", @core.any("logger >> cors")),
     ("timestamp", @core.any(get_timestamp())),
