@@ -80,8 +80,7 @@ fn template_package_json(project_name : String) -> String {
     #|    "@hono/node-server": "^1.0.0"
     #|  },
     #|  "devDependencies": {
-    #|    "rolldown": "^1.0.0-beta.54",
-    #|    "@luna_ui/sol": "^0.7.1"
+    #|    "rolldown": "^1.0.0-beta.54"
     #|  }
     #|}
   tmpl.replace(old="{{PROJECT_NAME}}", new=project_name)
@@ -156,9 +155,9 @@ pub fn template_layout_mbt() -> String {
 pub fn template_layout_moon_pkg() -> String {
   (
     #|import {
-    #|  "mizchi/luna" as @luna,
-    #|  "mizchi/sol/router" as @router,
-    #|  "mizchi/luna/dom/static" as @server_dom,
+    #|  "mizchi/luna" @luna,
+    #|  "mizchi/sol/router" @router,
+    #|  "mizchi/luna/dom/static" @server_dom,
     #|}
     #|
     #|options(
@@ -174,11 +173,6 @@ pub fn template_server_using_mbt() -> String {
     #|///| Server-side element DSL imports
     #|using @server_dom {
     #|  div,
-    #|  span,
-    #|  button,
-    #|  h1,
-    #|  h2,
-    #|  p,
     #|  a,
     #|  nav,
     #|  text,
@@ -238,6 +232,11 @@ pub fn template_routes_mbt(package_name : String) -> String {
     #|    .with_loader_url("/static/loader.js")
     #|}
     #|
+    #|///| Server Action registry (empty by default)
+    #|pub fn action_registry() -> @action.ActionRegistry {
+    #|  @action.ActionRegistry::new()
+    #|}
+    #|
     #|// ============================================================================
     #|// Page Definitions (inline in routes.mbt)
     #|// ============================================================================
@@ -284,13 +283,14 @@ pub fn template_routes_mbt(package_name : String) -> String {
 pub fn template_routes_moon_pkg(package_name : String) -> String {
   let tmpl =
     #|import {
-    #|  "mizchi/luna" as @luna,
-    #|  "mizchi/sol" as @sol,
-    #|  "mizchi/sol/router" as @router,
-    #|  "mizchi/luna/dom/static" as @server_dom,
-    #|  "mizchi/js/core" as @core,
-    #|  "{{PACKAGE_NAME}}/layout" as @layout,
-    #|  "{{PACKAGE_NAME}}/__gen__/types" as @types,
+    #|  "mizchi/luna" @luna,
+    #|  "mizchi/sol" @sol,
+    #|  "mizchi/sol/router" @router,
+    #|  "mizchi/sol/action" @action,
+    #|  "mizchi/luna/dom/static" @server_dom,
+    #|  "mizchi/js/core" @core,
+    #|  "{{PACKAGE_NAME}}/layout" @layout,
+    #|  "{{PACKAGE_NAME}}/__gen__/types" @types,
     #|}
     #|
     #|options(
@@ -309,9 +309,7 @@ pub fn template_routes_using_mbt() -> String {
     #|  span,
     #|  button,
     #|  h1,
-    #|  h2,
     #|  p,
-    #|  a,
     #|  text,
     #|}
   )
@@ -366,12 +364,14 @@ pub fn template_client_counter_mbt() -> String {
 pub fn template_client_counter_moon_pkg() -> String {
   (
     #|import {
-    #|  "mizchi/luna/dom" as @element,
-    #|  "mizchi/signals" as @signal,
+    #|  "moonbitlang/core/json",
+    #|  "mizchi/luna/dom" @element,
+    #|  "mizchi/signals" @signal,
     #|}
     #|
     #|options(
     #|  "supported-targets": [ "js" ],
+    #|  link: { "js": { "exports": [ "counter" ], "format": "esm" } },
     #|)
   )
 }
@@ -458,7 +458,8 @@ pub fn template_ln_loader_js() -> String {
 pub fn template_gen_types_moon_pkg() -> String {
   (
     #|import {
-    #|  "mizchi/luna" as @luna,
+    #|  "moonbitlang/core/json",
+    #|  "mizchi/luna" @luna,
     #|}
     #|
     #|options(

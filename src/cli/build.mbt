@@ -40,10 +40,11 @@ fn[FS : @env.FileSystem] patch_mars_reschedule_shim_with_fs(
   fs : FS,
   cwd : String,
   target : String,
+  profile : String,
 ) -> Unit {
   let server_js_path = @path.join2(
     cwd,
-    "_build/\{target}/release/build/__gen__/server/server.js",
+    "_build/\{target}/\{profile}/build/__gen__/server/server.js",
   )
   if not(fs.exists_sync(server_js_path)) {
     return
@@ -57,7 +58,9 @@ fn[FS : @env.FileSystem] patch_mars_reschedule_shim_with_fs(
   fs.write_file_sync(server_js_path, patched) catch {
     _ => return
   }
-  println(@colorette.gray("Patched async reschedule shim in server.js"))
+  println(
+    @colorette.gray("Patched async reschedule shim in \{profile} server.js"),
+  )
 }
 
 ///|
@@ -296,7 +299,7 @@ async fn[FS : @env.FileSystem] run_build_command_with_fs(
     }
   }
   println(@colorette.green("✓ Moon build complete"))
-  patch_mars_reschedule_shim_with_fs(fs, cwd, target)
+  patch_mars_reschedule_shim_with_fs(fs, cwd, target, "release")
   // Bundle client code with rolldown if manifest exists
   let manifest_path = @path.join2(cwd, ".sol/prod/manifest.json")
   if not(skip_bundle) && fs.exists_sync(manifest_path) {

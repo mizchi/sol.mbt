@@ -254,6 +254,7 @@ fn[FS : @env.FileSystem] run_incremental_build_dev_with_fs(
     }
   }
   println(@colorette.green("✓ Build complete"))
+  patch_mars_reschedule_shim_with_fs(fs, cwd, "js", "debug")
   // Bundle client code with rolldown if manifest exists
   let manifest_path = @path.join2(cwd, ".sol/dev/manifest.json")
   if fs.exists_sync(manifest_path) {

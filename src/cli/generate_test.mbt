@@ -447,7 +447,11 @@ test "parse_sol_config: default runtime is node" {
 
 ///|
 test "generate_sol_server_main_js: node runtime" {
-  let js = generate_sol_server_main_js("myapp/server", parse_runtime("node"))
+  let js = generate_sol_server_main_js(
+    "myapp/server",
+    parse_runtime("node"),
+    "prod",
+  )
   assert_true(js.contains("Runtime: RuntimeNode"))
   assert_true(js.contains("@hono/node-server"))
   assert_true(js.contains("@sol.run()"))
@@ -464,6 +468,7 @@ test "generate_sol_server_main_js: cloudflare runtime" {
   let js = generate_sol_server_main_js(
     "myapp/server",
     parse_runtime("cloudflare"),
+    "prod",
   )
   assert_true(js.contains("Runtime: RuntimeCloudflare"))
   assert_true(
@@ -477,7 +482,11 @@ test "generate_sol_server_main_js: cloudflare runtime" {
 
 ///|
 test "generate_sol_server_main_js: deno runtime" {
-  let js = generate_sol_server_main_js("myapp/server", parse_runtime("deno"))
+  let js = generate_sol_server_main_js(
+    "myapp/server",
+    parse_runtime("deno"),
+    "prod",
+  )
   assert_true(js.contains("Runtime: RuntimeDeno"))
   assert_true(
     js.contains(
@@ -492,7 +501,11 @@ test "generate_sol_server_main_js: deno runtime" {
 
 ///|
 test "generate_sol_server_main_js: bun runtime" {
-  let js = generate_sol_server_main_js("myapp/server", parse_runtime("bun"))
+  let js = generate_sol_server_main_js(
+    "myapp/server",
+    parse_runtime("bun"),
+    "prod",
+  )
   assert_true(js.contains("Runtime: RuntimeBun"))
   assert_true(
     js.contains(
@@ -503,6 +516,25 @@ test "generate_sol_server_main_js: bun runtime" {
   assert_true(js.contains("export default {"))
   assert_true(js.contains("port,"))
   assert_true(js.contains("fetch: app.fetch"))
+}
+
+///|
+test "generate_sol_server_main_js: dev mode uses debug build path" {
+  let js = generate_sol_server_main_js(
+    "myapp/server",
+    parse_runtime("node"),
+    "dev",
+  )
+  assert_true(
+    js.contains(
+      "import * as server from '../../../_build/js/debug/build/__gen__/server/server.js'",
+    ),
+  )
+  assert_true(
+    js.contains(
+      "export * from '../../../_build/js/debug/build/__gen__/server/server.js'",
+    ),
+  )
 }
 
 // =============================================================================
@@ -1056,7 +1088,8 @@ test "template_layout_mbt: provides root_layout used by routes template" {
 ///|
 test "template_layout_moon_pkg: uses current static dom package path" {
   let content = template_layout_moon_pkg()
-  assert_true(content.contains("\"mizchi/luna/dom/static\" as @server_dom"))
+  assert_true(content.contains("\"mizchi/luna/dom/static\" @server_dom"))
+  assert_true(not(content.contains(" as @")))
 }
 
 ///|
@@ -1068,7 +1101,8 @@ test "template_gen_types_mbt: includes counter component ref factory" {
 ///|
 test "template_gen_types_moon_pkg: imports luna for ComponentRef types" {
   let content = template_gen_types_moon_pkg()
-  assert_true(content.contains("\"mizchi/luna\" as @luna"))
+  assert_true(content.contains("\"moonbitlang/core/json\""))
+  assert_true(content.contains("\"mizchi/luna\" @luna"))
 }
 
 ///|
@@ -1086,6 +1120,14 @@ test "generate_templates: package.json includes dev/build/serve scripts" {
   assert_true(content.contains("\"dev\""))
   assert_true(content.contains("\"build\""))
   assert_true(content.contains("\"serve\""))
+}
+
+///|
+test "generate_templates: package.json avoids unreleased sol npm version" {
+  let templates = generate_templates("tester/myapp", "myapp", None)
+  let content = find_template_content(templates, "package.json").unwrap_or("")
+  assert_true(not(content.contains("\"@luna_ui/sol\"")))
+  assert_true(not(content.contains("^0.7.1")))
 }
 
 ///|
@@ -1113,8 +1155,10 @@ test "generate_templates: uses flat app/client package layout" {
 ///|
 test "template_client_counter_moon_pkg: uses current luna/signals imports" {
   let content = template_client_counter_moon_pkg()
-  assert_true(content.contains("\"mizchi/luna/dom\" as @element"))
-  assert_true(content.contains("\"mizchi/signals\" as @signal"))
+  assert_true(content.contains("\"moonbitlang/core/json\""))
+  assert_true(content.contains("\"mizchi/luna/dom\" @element"))
+  assert_true(content.contains("\"mizchi/signals\" @signal"))
+  assert_true(content.contains("\"exports\": [ \"counter\" ]"))
 }
 
 ///|
@@ -1128,5 +1172,53 @@ test "template_client_counter_mbt: uses modern using syntax" {
 ///|
 test "template_routes_moon_pkg: uses current static dom package path" {
   let content = template_routes_moon_pkg("tester/myapp")
-  assert_true(content.contains("\"mizchi/luna/dom/static\" as @server_dom"))
+  assert_true(content.contains("\"mizchi/luna/dom/static\" @server_dom"))
+  assert_true(not(content.contains(" as @")))
+}
+
+///|
+test "template_routes_moon_pkg: imports sol action package" {
+  let content = template_routes_moon_pkg("tester/myapp")
+  assert_true(content.contains("\"mizchi/sol/action\" @action"))
+}
+
+///|
+test "template_routes_mbt: defines default action_registry" {
+  let content = template_routes_mbt("tester/myapp")
+  assert_true(content.contains("pub fn action_registry()"))
+  assert_true(content.contains("@action.ActionRegistry::new()"))
+}
+
+///|
+test "template_routes_mbt: starter handlers keep async signature" {
+  let content = template_routes_mbt("tester/myapp")
+  assert_true(content.contains("async fn home("))
+  assert_true(content.contains("async fn about("))
+  assert_true(content.contains("async fn api_health("))
+}
+
+///|
+test "template_routes_using_mbt: keeps only starter-used tags" {
+  let content = template_routes_using_mbt()
+  assert_true(content.contains("div"))
+  assert_true(content.contains("button"))
+  assert_true(content.contains("h1"))
+  assert_true(content.contains("p"))
+  assert_true(content.contains("text"))
+  assert_true(not(content.contains("h2")))
+  assert_true(not(content.contains("\n  a,\n")))
+}
+
+///|
+test "template_server_using_mbt: keeps layout-only tags" {
+  let content = template_server_using_mbt()
+  assert_true(content.contains("div"))
+  assert_true(content.contains("a"))
+  assert_true(content.contains("nav"))
+  assert_true(content.contains("text"))
+  assert_true(content.contains("outlet"))
+  assert_true(not(content.contains("\n  span,\n")))
+  assert_true(not(content.contains("\n  button,\n")))
+  assert_true(not(content.contains("\n  h1,\n")))
+  assert_true(not(content.contains("\n  p,\n")))
 }

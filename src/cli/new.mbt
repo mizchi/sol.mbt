@@ -154,6 +154,6 @@ fn[FS : @env.FileSystem] run_new_command_with_fs(
   println(@colorette.green("\n✓ Project created successfully!\n"))
   println("Next steps:")
   println(@colorette.cyan("  cd \{project_name}"))
-  println(@colorette.cyan("  npm install"))
-  println(@colorette.cyan("  npm run dev"))
+  println(@colorette.cyan("  pnpm install"))
+  println(@colorette.cyan("  pnpm dev"))
 }
