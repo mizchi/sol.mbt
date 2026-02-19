@@ -28,6 +28,15 @@ just bench-k6-quick
 BASE_URL=http://localhost:7777 k6 run bench/k6/sol-app-mix.js
 ```
 
+ルート別にボトルネックを確認する場合:
+
+```bash
+BASE_URL=http://localhost:7777 VUS=10 DURATION=10s k6 run bench/k6/sol-app-route-profile.js
+```
+
+`examples/sol_app` では `SOL_BENCH_MODE=1` を付けてサーバーを起動すると、
+logger ミドルウェアを無効化して純粋なレスポンス性能を測れます。
+
 ### パラメータ
 
 - `BASE_URL` (default: `http://localhost:7777`)

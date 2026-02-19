@@ -197,7 +197,7 @@ bench-k6 vus="20" duration="30s" think_time="0.1":
     just build-moon
     cd examples/sol_app
     node ../../target/js/debug/build/cli/cli.js build
-    PORT=7777 node ../../target/js/debug/build/cli/cli.js serve > /tmp/sol-bench-k6.log 2>&1 &
+    SOL_BENCH_MODE=1 PORT=7777 node ../../target/js/debug/build/cli/cli.js serve > /tmp/sol-bench-k6.log 2>&1 &
     SERVER_PID=$!
     trap "kill $SERVER_PID 2>/dev/null || true" EXIT
 
@@ -216,6 +216,12 @@ bench-k6 vus="20" duration="30s" think_time="0.1":
 # k6 クイックベンチマーク
 bench-k6-quick:
     @just bench-k6 5 10s 0.05
+
+# k6 ルート別プロファイル
+bench-k6-profile vus="10" duration="10s":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    BASE_URL="http://localhost:7777" VUS="{{vus}}" DURATION="{{duration}}" THINK_TIME=0.02 k6 run bench/k6/sol-app-route-profile.js
 
 # =============================================================================
 # カバレッジ
