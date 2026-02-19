@@ -35,7 +35,11 @@ fn content_type_for_file(filename : String) -> String {
 }
 
 ///|
-fn apply_static_headers(c : Ctx, content_type : String, cache_control : String) -> Unit {
+fn apply_static_headers(
+  c : Ctx,
+  content_type : String,
+  cache_control : String,
+) -> Unit {
   c.set_header("Content-Type", content_type)
   c.set_header("Cache-Control", cache_control)
   c.set_header("X-Content-Type-Options", "nosniff")
@@ -52,6 +56,7 @@ fn send_static_text(
   c.text(body)
 }
 
+///|
 /// Static file configuration
 pub struct StaticFileConfig {
   /// URL path prefix (e.g., "/static")
@@ -260,9 +265,8 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> Unit {
           let content_type = content_type_for_file(filename)
           send_static_text(c, content, content_type, cache_ctl)
         }
-        None => {
+        None =>
           send_static_text(c, "Not found: " + filename, "text/plain", cache_ctl)
-        }
       }
     }),
   )

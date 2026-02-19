@@ -45,7 +45,9 @@ test "resolve_dynamic_param_value - non catch-all skips missing param" {
 ///|
 test "build_source_with_dynamic_param - encodes catch-all slash" {
   let source = build_source_with_dynamic_params(
-    "docs/_...slug_.md", "slug", "guide/intro",
+    "docs/_...slug_.md",
+    "slug",
+    "guide/intro",
     {},
   )
   assert_eq(source, "docs/_...slug_.md?slug=guide%2Fintro")
@@ -53,17 +55,11 @@ test "build_source_with_dynamic_param - encodes catch-all slash" {
 
 ///|
 test "build_source_with_dynamic_params - appends extra params as query" {
-  let params : Map[String, String] = {
-    "lang": "ja", "sort": "desc&asc",
-  }
+  let params : Map[String, String] = { "lang": "ja", "sort": "desc&asc" }
   let source = build_source_with_dynamic_params(
-    "docs/_...slug_.md",
-    "slug",
-    "guide/intro",
-    params,
+    "docs/_...slug_.md", "slug", "guide/intro", params,
   )
   assert_eq(
-    source,
-    "docs/_...slug_.md?slug=guide%2Fintro&lang=ja&sort=desc%26asc",
+    source, "docs/_...slug_.md?slug=guide%2Fintro&lang=ja&sort=desc%26asc",
   )
 }

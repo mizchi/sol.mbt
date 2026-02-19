@@ -95,10 +95,6 @@ fn[E] render_page_html(
   // Add HMR script in dev mode
   let full_head = @hot_reload.with_dev_head_script(head)
   @page_shell.render_template(
-    template,
-    title,
-    full_head,
-    preload_tags,
-    body_html,
+    template, title, full_head, preload_tags, body_html,
   )
 }

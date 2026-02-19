@@ -1,3 +1,4 @@
+///|
 test "default_hmr_port: adds offset to app port" {
   assert_eq(default_hmr_port(3000), 3100)
   assert_eq(default_hmr_port(7777), 7877)
@@ -23,10 +24,7 @@ test "resolve_app_port: falls back when missing" {
 
 ///|
 test "resolve_hmr_port: HMR_PORT takes precedence" {
-  let port = resolve_hmr_port(
-    hmr_port=Some("24679"),
-    app_port=Some("3000"),
-  )
+  let port = resolve_hmr_port(hmr_port=Some("24679"), app_port=Some("3000"))
   assert_eq(port, 24679)
 }
 
@@ -78,9 +76,7 @@ test "with_dev_head_script: appends script in dev mode" {
 test "inject_script: injects before closing body tag" {
   let html = "<html><body><h1>Hello</h1></body></html>"
   let injected = inject_script(html, "<script>hmr</script>")
-  assert_true(
-    injected.contains("<h1>Hello</h1><script>hmr</script></body>"),
-  )
+  assert_true(injected.contains("<h1>Hello</h1><script>hmr</script></body>"))
 }
 
 ///|

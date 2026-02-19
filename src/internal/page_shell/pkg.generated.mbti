@@ -12,6 +12,8 @@ pub fn render_streaming_footer() -> String
 
 pub fn render_streaming_header(String, String, String) -> String
 
+pub fn render_streaming_template_parts(String, String, String, String, String) -> (String, String)?
+
 pub fn render_template(String, String, String, String, String) -> String
 
 // Errors

@@ -1,3 +1,4 @@
+///|
 test "render_document wraps body with app container by default" {
   let html = render_document("App", "", "<p>hello</p>")
   assert_true(html.contains("<div id=\"app\"><p>hello</p></div>"))
@@ -19,7 +20,39 @@ test "render_template replaces all placeholders" {
 ///|
 test "render_streaming_header includes loader url" {
   let header = render_streaming_header("App", "", "/static/loader.js")
-  assert_true(header.contains("<script type=\"module\" src=\"/static/loader.js\"></script>"))
+  assert_true(
+    header.contains(
+      "<script type=\"module\" src=\"/static/loader.js\"></script>",
+    ),
+  )
+}
+
+///|
+test "render_streaming_template_parts splits template and injects loader" {
+  let tpl = "<html><head><title>__LUNA_TITLE__</title>__LUNA_PRELOAD____LUNA_HEAD__</head><body><main id=\"root\">__LUNA_MAIN__</main></body></html>"
+  let result = render_streaming_template_parts(
+    tpl, "App", "<meta name=\"x\" content=\"1\">", "<link rel=\"modulepreload\" href=\"/entry.js\">",
+    "/static/loader.js",
+  )
+  guard result is Some((header, footer)) else {
+    fail("expected template parts")
+  }
+  assert_true(header.contains("<title>App</title>"))
+  assert_true(header.contains("<meta name=\"x\" content=\"1\">"))
+  assert_true(
+    header.contains(
+      "<script type=\"module\" src=\"/static/loader.js\"></script>",
+    ),
+  )
+  assert_true(header.contains("<main id=\"root\">"))
+  assert_true(footer.contains("</main></body></html>"))
+}
+
+///|
+test "render_streaming_template_parts returns None without main placeholder" {
+  let tpl = "<html><body>No placeholder</body></html>"
+  let result = render_streaming_template_parts(tpl, "App", "", "", "/loader.js")
+  assert_true(result is None)
 }
 
 ///|

@@ -41,6 +41,40 @@ pub fn render_template(
 }
 
 ///|
+fn loader_script_tag(loader_url : String) -> String {
+  "<script type=\"module\" src=\"" + loader_url + "\"></script>"
+}
+
+///|
+/// Build streaming header/footer from root template placeholders.
+/// Returns None when template does not contain `__LUNA_MAIN__`.
+pub fn render_streaming_template_parts(
+  template : String,
+  title : String,
+  head : String,
+  preload : String,
+  loader_url : String,
+) -> (String, String)? {
+  let head_with_loader = head + loader_script_tag(loader_url)
+  let rendered = template
+    .replace(old="__LUNA_TITLE__", new=title)
+    .replace(old="__LUNA_PRELOAD__", new=preload)
+    .replace(old="__LUNA_HEAD__", new=head_with_loader)
+  let marker = "__LUNA_MAIN__"
+  match rendered.find(marker) {
+    Some(idx) => {
+      let marker_len = marker.length()
+      let header = rendered[:idx].to_string() catch { _ => return None }
+      let footer = rendered[idx + marker_len:].to_string() catch {
+        _ => return None
+      }
+      Some((header, footer))
+    }
+    None => None
+  }
+}
+
+///|
 /// Render streaming SSR header.
 pub fn render_streaming_header(
   title : String,
@@ -51,9 +85,8 @@ pub fn render_streaming_header(
   title +
   "</title>" +
   head +
-  "<script type=\"module\" src=\"" +
-  loader_url +
-  "\"></script></head><body><div id=\"app\">"
+  loader_script_tag(loader_url) +
+  "</head><body><div id=\"app\">"
 }
 
 ///|

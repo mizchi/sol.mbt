@@ -135,7 +135,10 @@ pub fn render_island_page(
   let title_str = title.unwrap_or("App")
   let head_str = head.unwrap_or("")
   let loader = loader_url.unwrap_or(default_loader_url)
-  let full_head = head_str + "<script type=\"module\" src=\"" + loader + "\"></script>"
+  let full_head = head_str +
+    "<script type=\"module\" src=\"" +
+    loader +
+    "\"></script>"
   let sb = StringBuilder::new(size_hint=4096)
   for island_html in islands {
     sb.write_string(island_html)
@@ -304,6 +307,7 @@ pub fn[E] wc_page(
 
 // ============================================================================
 
+///|
 pub fn[E] render_with_island_preloads(
   node : @luna.Node[E, String],
 ) -> @render.SSRResult {

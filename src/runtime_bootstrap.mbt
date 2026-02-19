@@ -27,6 +27,7 @@ fn with_created_app(callback : (App) -> Unit) -> Unit {
   })
 }
 
+///|
 /// Run a Sol application with standard configuration
 /// This is the recommended way to start a Sol server.
 ///

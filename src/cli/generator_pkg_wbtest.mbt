@@ -8,11 +8,9 @@ test "generate_server_pkg: uses modern import alias syntax" {
 
 ///|
 test "generate_client_gen_pkg: uses modern import alias syntax" {
-  let content = generate_client_gen_pkg(
-    "tester/myapp/client",
-    "client",
-    ["__sol_internal__client_counter"],
-  )
+  let content = generate_client_gen_pkg("tester/myapp/client", "client", [
+    "__sol_internal__client_counter",
+  ])
   assert_true(content.contains("\"tester/myapp/client\" @client"))
   assert_true(content.contains("\"mizchi/js/browser/dom\" @js_dom"))
   assert_true(content.contains("\"mizchi/luna/dom/client\" @wc"))

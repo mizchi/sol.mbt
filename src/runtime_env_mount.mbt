@@ -1,5 +1,6 @@
 // Runtime environment and mount helpers
 
+///|
 /// Check if running in adapter mode (SOL_ADAPTER env variable)
 /// When true, server startup is delegated to the adapter wrapper (serve.js)
 extern "js" fn is_adapter_mode() -> Bool =

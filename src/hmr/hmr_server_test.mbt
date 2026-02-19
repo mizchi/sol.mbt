@@ -1,3 +1,4 @@
+///|
 test "HmrMessage::to_json - update includes islands and timestamp" {
   let msg = HmrMessage::Update(islands=["*"], timestamp_ms=1234.0).to_json()
   assert_true(msg.contains("\"type\":\"update\""))

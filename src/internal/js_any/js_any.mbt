@@ -10,10 +10,7 @@ pub fn json_obj(pairs : Array[(String, @js.Any)]) -> @js.Any {
 }
 
 ///|
-extern "js" fn ffi_object_get_string(
-  obj : @js.Any,
-  key : String,
-) -> String? =
+extern "js" fn ffi_object_get_string(obj : @js.Any, key : String) -> String? =
   #| (obj, key) => {
   #|   const value = obj?.[key];
   #|   return typeof value === 'string' ? value : undefined;

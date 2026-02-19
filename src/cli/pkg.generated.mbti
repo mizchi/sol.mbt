@@ -32,7 +32,7 @@ pub fn generate_params_with_names(String) -> (String, String)
 
 pub fn generate_sol_serve_js(ServerRuntime) -> String
 
-pub fn generate_sol_server_main_js(String, ServerRuntime) -> String
+pub fn generate_sol_server_main_js(String, ServerRuntime, String) -> String
 
 pub fn generate_sol_server_main_js_hybrid(String, ServerRuntime) -> String
 
@@ -78,21 +78,13 @@ pub fn run_ssg_lint(Array[String]) -> Unit
 
 pub fn split_params(String) -> Array[String]
 
-pub fn template_about_page_mbt() -> String
-
 pub fn template_client_counter_mbt() -> String
 
 pub fn template_client_counter_moon_pkg() -> String
 
-pub fn template_components_moon_pkg_json() -> String
-
-pub fn template_counter_mbt() -> String
-
 pub fn template_gen_types_mbt() -> String
 
 pub fn template_gen_types_moon_pkg() -> String
-
-pub fn template_home_page_mbt() -> String
 
 pub fn template_layout_mbt() -> String
 
@@ -100,19 +92,11 @@ pub fn template_layout_moon_pkg() -> String
 
 pub fn template_ln_loader_js() -> String
 
-pub fn template_page_simple_moon_pkg() -> String
-
-pub fn template_page_with_island_moon_pkg(String) -> String
-
 pub fn template_routes_mbt(String) -> String
 
 pub fn template_routes_moon_pkg(String) -> String
 
 pub fn template_routes_using_mbt() -> String
-
-pub fn template_server_main_mbt() -> String
-
-pub fn template_server_run_moon_pkg_json(String) -> String
 
 pub fn template_server_using_mbt() -> String
 

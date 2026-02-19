@@ -20,9 +20,7 @@ pub fn render_streaming_page(
 
   // Build header HTML
   let header_html = @page_shell.render_streaming_header(
-    title_str,
-    head_str,
-    loader,
+    title_str, head_str, loader,
   )
 
   // Build footer HTML
@@ -92,9 +90,7 @@ pub fn streaming_page(
       let head_str = head.unwrap_or("")
       let loader = loader_url.unwrap_or(default_loader_url)
       let header_html = @page_shell.render_streaming_header(
-        title_str,
-        head_str,
-        loader,
+        title_str, head_str, loader,
       )
       let footer_html = @page_shell.render_streaming_footer()
       // Create streaming response and send via FFI
@@ -110,6 +106,14 @@ pub fn streaming_page(
 /// Set streaming response via FFI (for Mars Context)
 extern "js" fn ffi_set_streaming_response(ctx : Ctx, stream : @js.Any) -> Unit =
   #| (ctx, stream) => {
-  #|   const response = new Response(stream, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  #|   const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+  #|   const map = ctx.response_headers;
+  #|   let curr = map ? map.head : undefined;
+  #|   while (curr !== undefined && curr !== -1) {
+  #|     headers[curr.key] = curr.value;
+  #|     curr = curr.next;
+  #|   }
+  #|   const response = new Response(stream, { headers });
   #|   ctx.platform.response_resolve(response);
+  #|   ctx.response_sent = true;
   #| }

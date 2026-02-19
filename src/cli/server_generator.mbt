@@ -92,12 +92,16 @@ fn generate_server_pkg(routes_pkg : String) -> String {
 ///|
 fn write_port_and_log(buf : StringBuilder, port_expr : String) -> Unit {
   buf.write_string(port_expr)
-  buf.write_string("console.log(`Server running at http://localhost:${port}`);\n")
+  buf.write_string(
+    "console.log(`Server running at http://localhost:${port}`);\n",
+  )
 }
 
 ///|
 fn write_node_port_and_log(buf : StringBuilder) -> Unit {
-  write_port_and_log(buf, "const port = parseInt(process.env.PORT || '7777', 10);\n")
+  write_port_and_log(
+    buf, "const port = parseInt(process.env.PORT || '7777', 10);\n",
+  )
 }
 
 ///|
@@ -165,7 +169,9 @@ pub fn generate_sol_server_main_js(
       )
       buf.write_string("// Deno runtime\n")
       buf.write_string("const app = globalThis.__SOL_APP__;\n")
-      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
+      write_port_and_log(
+        buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
+      )
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {
@@ -237,7 +243,9 @@ pub fn generate_sol_server_main_js_hybrid(
       buf.write_string(
         "const app = registerRoutes(new Hono(), routes(), config?.() || {});\n",
       )
-      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
+      write_port_and_log(
+        buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
+      )
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {
@@ -284,7 +292,9 @@ pub fn generate_sol_serve_js(adapter : ServerRuntime) -> String {
       buf.write_string("serve({ fetch: app.fetch, port });\n")
     }
     RuntimeDeno => {
-      write_port_and_log(buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n")
+      write_port_and_log(
+        buf, "const port = parseInt(Deno.env.get('PORT') || '7777', 10);\n",
+      )
       buf.write_string("Deno.serve({ port }, app.fetch);\n")
     }
     RuntimeBun => {

@@ -54,9 +54,7 @@ fn generate_types_mbt(structs : Array[StructExport]) -> String {
 
 ///|
 /// Generate types/moon.pkg
-fn generate_types_pkg(
-  structs : Array[StructExport],
-) -> String {
+fn generate_types_pkg(structs : Array[StructExport]) -> String {
   let buf = StringBuilder::new()
   buf.write_string("import {\n")
   buf.write_string("  \"moonbitlang/core/json\",\n")

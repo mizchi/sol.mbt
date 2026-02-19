@@ -473,16 +473,180 @@ fn compile_sol_routes_inner(
 // ============================================================================
 
 ///|
+extern "js" fn ffi_ensure_mars_to_handler_reschedule_symbol() -> Unit =
+  #| () => {
+  #|   if (typeof globalThis.moonbitlang$async$internal$event_loop$$reschedule !== "function") {
+  #|     globalThis.moonbitlang$async$internal$event_loop$$reschedule = () => {};
+  #|   }
+  #| }
+
+///|
+fn ensure_mars_to_handler_compat() -> Unit {
+  ffi_ensure_mars_to_handler_reschedule_symbol()
+}
+
+///|
 /// Register Sol routes to Hono app
 pub fn register_sol_routes(
   app : App,
   routes : Array[SolRoutes],
   config? : RouterConfig,
 ) -> Unit {
+  ensure_mars_to_handler_compat()
   let compiled = compile_sol_routes(routes)
   let cfg = config.unwrap_or(RouterConfig::default())
   register_compiled_sol_routes(app, compiled, cfg)
 }
+
+///|
+fn render_meta_tags(meta : Array[(String, String)]) -> String {
+  if meta.is_empty() {
+    return ""
+  }
+  let buf = StringBuilder::new()
+  for pair in meta {
+    let key = @page_shell.escape_html_text(pair.0)
+    let value = @page_shell.escape_html_text(pair.1)
+    buf.write_string("<meta name=\"")
+    buf.write_string(key)
+    buf.write_string("\" content=\"")
+    buf.write_string(value)
+    buf.write_string("\">")
+  }
+  buf.to_string()
+}
+
+///|
+fn build_page_head(
+  default_head : String,
+  meta : Array[(String, String)],
+) -> String {
+  default_head + render_meta_tags(meta)
+}
+
+///|
+fn is_isr_with_cache(config : RouterConfig, route_revalidate : Int?) -> Bool {
+  match (route_revalidate, config.isr_cache) {
+    (Some(_), Some(_)) => true
+    _ => false
+  }
+}
+
+///|
+fn should_use_streaming(
+  config : RouterConfig,
+  is_fragment : Bool,
+  route_revalidate : Int?,
+) -> Bool {
+  config.enable_streaming &&
+  not(is_fragment) &&
+  not(is_isr_with_cache(config, route_revalidate))
+}
+
+///|
+fn cache_strategy_to_header_value(strategy : CacheStrategy) -> String {
+  match strategy {
+    CacheStrategy::AlwaysFetch => "always-fetch"
+    CacheStrategy::StaleWhileRevalidate => "stale-while-revalidate"
+  }
+}
+
+///|
+fn apply_layouts(
+  content : @server_dom.ServerNode,
+  props : PageProps,
+  layouts : Array[
+    (PageProps, @server_dom.ServerNode) -> @server_dom.ServerNode raise Error,
+  ],
+  is_fragment : Bool,
+) -> @server_dom.ServerNode raise Error {
+  // Apply layouts from innermost to outermost
+  // For fragments: skip root layout (index 0), apply nested layouts
+  // For full pages: apply all layouts
+  let mut node = content
+  let end_idx = if is_fragment { 1 } else { 0 }
+  let mut i = layouts.length() - 1
+  while i >= end_idx {
+    let layout_fn = layouts[i]
+    node = layout_fn(props, node)
+    i -= 1
+  }
+  node
+}
+
+///|
+fn create_streaming_response_with_async(
+  header : String,
+  footer : String,
+  shell : @luna.Node[Unit, String],
+) -> @js.Any {
+  ffi_create_streaming_response_async(header, footer, async fn(write) {
+    @stream_renderer.render_to_stream_with_async(
+      shell,
+      @stream_renderer.StreamWriter::from_callback(write),
+    )
+  })
+}
+
+///|
+async fn send_streaming_server_page(
+  c : Ctx,
+  node : @server_dom.ServerNode,
+  title : String,
+  head : String,
+  loader_url : String,
+  root_template : String,
+) -> Unit {
+  let resolved_node = node.resolve()
+  let full_head = @hot_reload.with_dev_head_script(head)
+  let (header_html, footer_html) = match
+    @page_shell.render_streaming_template_parts(
+      root_template, title, full_head, "", loader_url,
+    ) {
+    Some(parts) => parts
+    None =>
+      (
+        @page_shell.render_streaming_header(title, full_head, loader_url),
+        @page_shell.render_streaming_footer(),
+      )
+  }
+  let stream = create_streaming_response_with_async(
+    header_html, footer_html, resolved_node,
+  )
+  ffi_set_streaming_response(c, stream)
+}
+
+///|
+extern "js" fn ffi_create_streaming_response_async(
+  header : String,
+  footer : String,
+  render_with_async : async ((String) -> Unit) -> Unit,
+) -> @js.Any =
+  #| (header, footer, renderWithAsync) => new ReadableStream({
+  #|   async start(controller) {
+  #|     const encoder = new TextEncoder();
+  #|     const write = (chunk) => controller.enqueue(encoder.encode(chunk));
+  #|     write(header);
+  #|     await renderWithAsync(write);
+  #|     write(footer);
+  #|     controller.close();
+  #|   }
+  #| })
+
+///|
+extern "js" fn ffi_set_streaming_response(ctx : Ctx, stream : @js.Any) -> Unit =
+  #| (ctx, stream) => {
+  #|   const headers = { 'Content-Type': 'text/html; charset=utf-8' };
+  #|   const map = ctx.response_headers;
+  #|   let curr = map ? map.head : undefined;
+  #|   while (curr !== undefined && curr !== -1) {
+  #|     headers[curr.key] = curr.value;
+  #|     curr = curr.next;
+  #|   }
+  #|   const response = new Response(stream, { headers });
+  #|   ctx.platform.response_resolve(response);
+  #|   ctx.response_sent = true;
+  #| }
 
 ///|
 /// Render page and return HTML (helper for ISR)
@@ -495,27 +659,17 @@ async fn render_page_to_html(
   ],
   is_fragment : Bool,
   title : String,
-  default_head : String,
+  page_head : String,
   root_template : String,
+  cache_strategy : CacheStrategy,
 ) -> String raise Error {
   // Call handler and apply layouts
   let content : @server_dom.ServerNode = handler(props)
-
-  // Apply layouts from innermost to outermost
-  // For fragments: skip root layout (index 0), apply nested layouts
-  // For full pages: apply all layouts
-  let mut node = content
-  let end_idx = if is_fragment { 1 } else { 0 }
-  let mut i = layouts.length() - 1
-  while i >= end_idx {
-    let layout_fn = layouts[i]
-    node = layout_fn(props, node)
-    i -= 1
-  }
+  let node = apply_layouts(content, props, layouts, is_fragment)
   if is_fragment {
-    render_server_fragment(node, title)
+    render_server_fragment(node, title, cache_strategy)
   } else {
-    render_server_page_html(node, title, default_head, root_template)
+    render_server_page_html(node, title, page_head, root_template)
   }
 }
 
@@ -544,6 +698,9 @@ async fn handle_compiled_api_route(
           @mars_response.send_internal_error(c, message=e.to_string())
           return
         }
+      }
+      if c.is_response_sent() {
+        return
       }
       @mars_response.send_json_any(c, json)
     }
@@ -616,6 +773,11 @@ fn register_compiled_sol_routes(
             title_prefix=config.title_prefix,
             default_title=config.default_title,
           )
+          let page_head = build_page_head(config.default_head, route.meta)
+          c.set_header(
+            "X-Sol-Cache-Strategy",
+            cache_strategy_to_header_value(route.cache_strategy),
+          )
           match route.page_handler {
             Some(PageHandler(handler)) =>
               // Check if ISR is enabled for this route (only for full page requests)
@@ -631,7 +793,7 @@ fn register_compiled_sol_routes(
                       // Return cached HTML directly
                       match entry {
                         Some(e) => c.html(e.html)
-                        None => c.text("Cache error")
+                        None => c.text("Cache error", status=500)
                       }
                     @isr.Stale =>
                       // Return cached HTML and schedule background revalidation
@@ -646,8 +808,9 @@ fn register_compiled_sol_routes(
                               route.layouts,
                               false,
                               page_title,
-                              config.default_head,
+                              page_head,
                               config.root_template,
+                              route.cache_strategy,
                             ) catch {
                               _ => return
                             }
@@ -660,7 +823,7 @@ fn register_compiled_sol_routes(
                           })
                           c.html(e.html)
                         }
-                        None => c.text("Cache error")
+                        None => c.text("Cache error", status=500)
                       }
                     @isr.Miss => {
                       // Render, cache, and return
@@ -671,10 +834,12 @@ fn register_compiled_sol_routes(
                         route.layouts,
                         false,
                         page_title,
-                        config.default_head,
+                        page_head,
                         config.root_template,
+                        route.cache_strategy,
                       ) catch {
-                        e => return c.text("Error: " + e.to_string())
+                        e =>
+                          return c.text("Error: " + e.to_string(), status=500)
                       }
                       let new_entry = @isr.CacheEntry::new(
                         html, now, revalidate,
@@ -687,48 +852,61 @@ fn register_compiled_sol_routes(
                 _ => {
                   // No ISR - render normally
                   let content : @server_dom.ServerNode = handler(props) catch {
-                    e => return c.text("Error: " + e.to_string())
+                    e => return c.text("Error: " + e.to_string(), status=500)
                   }
-
-                  // Apply layouts from innermost to outermost
-                  // For fragments: skip root layout (index 0), apply nested layouts
-                  // For full pages: apply all layouts
-                  let mut node = content
-                  let layouts = route.layouts
-                  let end_idx = if is_fragment { 1 } else { 0 }
-                  let mut i = layouts.length() - 1
-                  while i >= end_idx {
-                    let layout_fn = layouts[i]
-                    node = layout_fn(props, node) catch {
-                      e => return c.text("Layout error: " + e.to_string())
-                    }
-                    i -= 1
+                  if c.is_response_sent() {
+                    return
+                  }
+                  let node = apply_layouts(
+                    content,
+                    props,
+                    route.layouts,
+                    is_fragment,
+                  ) catch {
+                    e =>
+                      return c.text(
+                        "Layout error: " + e.to_string(),
+                        status=500,
+                      )
                   }
                   if is_fragment {
-                    let fragment_html = render_server_fragment(node, page_title)
+                    let fragment_html = render_server_fragment(
+                      node,
+                      page_title,
+                      route.cache_strategy,
+                    )
                     send_fragment_response(c, fragment_html)
+                  } else if should_use_streaming(
+                      config,
+                      is_fragment,
+                      route.revalidate,
+                    ) {
+                    send_streaming_server_page(
+                      c,
+                      node,
+                      page_title,
+                      page_head,
+                      config.loader_url,
+                      config.root_template,
+                    )
                   } else {
                     let html = render_server_page_html(
                       node,
                       page_title,
-                      config.default_head,
+                      page_head,
                       config.root_template,
                     )
                     c.html(html)
                   }
                 }
               }
-            None => c.text("No handler for route")
+            None => c.text("No handler for route", status=404)
           }
         })
       kind =>
         if is_api_route_kind(kind) {
           register_compiled_api_route(
-            app,
-            kind,
-            hono_pattern,
-            route,
-            middleware_chain,
+            app, kind, hono_pattern, route, middleware_chain,
           )
         }
     }
@@ -740,6 +918,7 @@ fn register_compiled_sol_routes(
 async fn render_server_fragment(
   node : @server_dom.ServerNode,
   title : String,
+  cache_strategy : CacheStrategy,
 ) -> String {
   // Resolve the ServerNode to get the actual Node
   let resolved_node = node.resolve()
@@ -752,6 +931,9 @@ async fn render_server_fragment(
   buf.write_string("</template>")
   buf.write_string("<template data-sol-title>")
   buf.write_string(@page_shell.escape_html_text(title))
+  buf.write_string("</template>")
+  buf.write_string("<template data-sol-cache-strategy>")
+  buf.write_string(cache_strategy_to_header_value(cache_strategy))
   buf.write_string("</template>")
   buf.to_string()
 }

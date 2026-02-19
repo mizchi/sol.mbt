@@ -124,3 +124,18 @@
 
 - [x] [P1] `sol clean --all` と `sol dev --clean` で `target -> _build` 環境の cleanup 順序を修正する  
   対応: legacy `target` を先に削除してから `_build` を削除する順序に統一し、壊れ symlink 残留リスクを除去
+
+- [x] [P2] `register_sol_routes` の streaming 出力を実レスポンスとして検証する  
+  対応: `sol_routes_wbtest` に stream を `Response.text()` で読むテストを追加し、header/body/footer 連結を保証
+
+- [x] [P1] streaming 応答で `set_header` 済みヘッダーが欠落する不整合を修正する  
+  対応: `ffi_set_streaming_response` で `ctx.response_headers` を引き継ぎ、`X-Sol-Cache-Strategy` などを保持
+
+- [x] [P2] `register_sol_routes` の streaming/fragment/ISR 分岐を黒箱で固定化する  
+  対応: `app.to_handler` 経由テストを追加し、full-page は streaming、fragment/ISR は non-streaming を検証
+
+- [x] [P1] `mars.to_handler` の `reschedule` 参照欠落を `sol` 側互換レイヤで吸収する  
+  対応: `register_routes` / `register_server_routes` / `register_sol_routes` で互換シンボルを初期化し、wbtest 側 polyfill を削除
+
+- [x] [P2] streaming SSR で `root_template` を利用する  
+  対応: `__LUNA_MAIN__` で template を header/footer に分割して streaming へ適用、placeholder 不在時は built-in shell にフォールバック

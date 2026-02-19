@@ -8,7 +8,10 @@ pub let default_hmr_offset : Int = 100
 
 ///|
 /// Resolve default HMR port from application port
-pub fn default_hmr_port(app_port : Int, offset? : Int = default_hmr_offset) -> Int {
+pub fn default_hmr_port(
+  app_port : Int,
+  offset? : Int = default_hmr_offset,
+) -> Int {
   app_port + offset
 }
 
@@ -34,13 +37,13 @@ pub fn resolve_hmr_port(
     Some(raw_hmr) =>
       @strconv.parse_int(raw_hmr) catch {
         _ => {
-          let app = resolve_app_port(app_port=app_port, default_port=default_port)
-          default_hmr_port(app, offset=offset)
+          let app = resolve_app_port(app_port~, default_port~)
+          default_hmr_port(app, offset~)
         }
       }
     None => {
-      let app = resolve_app_port(app_port=app_port, default_port=default_port)
-      default_hmr_port(app, offset=offset)
+      let app = resolve_app_port(app_port~, default_port~)
+      default_hmr_port(app, offset~)
     }
   }
 }
@@ -76,7 +79,10 @@ extern "js" fn env_var(name : String) -> String? =
 
 ///|
 /// Check dev mode using environment variables
-pub fn is_dev_mode(flag_env? : String = "SOL_DEV", expected? : String = "1") -> Bool {
+pub fn is_dev_mode(
+  flag_env? : String = "SOL_DEV",
+  expected? : String = "1",
+) -> Bool {
   match env_var(flag_env) {
     Some(v) => v == expected
     None => false
@@ -89,7 +95,7 @@ pub fn app_port_from_env(
   app_port_env? : String = "PORT",
   default_port? : Int = default_app_port,
 ) -> Int {
-  resolve_app_port(app_port=env_var(app_port_env), default_port=default_port)
+  resolve_app_port(app_port=env_var(app_port_env), default_port~)
 }
 
 ///|
@@ -103,8 +109,8 @@ pub fn hmr_port_from_env(
   resolve_hmr_port(
     hmr_port=env_var(hmr_port_env),
     app_port=env_var(app_port_env),
-    default_port=default_port,
-    offset=offset,
+    default_port~,
+    offset~,
   )
 }
 
@@ -117,17 +123,20 @@ pub fn client_script_from_env(
   offset? : Int = default_hmr_offset,
 ) -> String {
   let port = hmr_port_from_env(
-    hmr_port_env=hmr_port_env,
-    app_port_env=app_port_env,
-    default_port=default_port,
-    offset=offset,
+    hmr_port_env~,
+    app_port_env~,
+    default_port~,
+    offset~,
   )
   client_script_hostname(port)
 }
 
 ///|
 /// Append HMR client script to head only in dev mode
-pub fn with_dev_head_script(head : String, dev_mode? : Bool = is_dev_mode()) -> String {
+pub fn with_dev_head_script(
+  head : String,
+  dev_mode? : Bool = is_dev_mode(),
+) -> String {
   if dev_mode {
     head + client_script_from_env()
   } else {

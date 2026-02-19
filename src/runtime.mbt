@@ -62,7 +62,9 @@ pub fn[E] page(
         let loader_script = "<script type=\"module\" src=\"" +
           loader +
           "\"></script>"
-        let full_head = @hot_reload.with_dev_head_script(base_head + loader_script)
+        let full_head = @hot_reload.with_dev_head_script(
+          base_head + loader_script,
+        )
         let html = render_page(node, title?, head=full_head, hydration=true)
         c.html(html)
       } else {

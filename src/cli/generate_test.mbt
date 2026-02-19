@@ -1127,7 +1127,7 @@ test "generate_templates: package.json avoids unreleased sol npm version" {
   let templates = generate_templates("tester/myapp", "myapp", None)
   let content = find_template_content(templates, "package.json").unwrap_or("")
   assert_true(not(content.contains("\"@luna_ui/sol\"")))
-  assert_true(not(content.contains("^0.7.1")))
+  assert_true(not(content.contains("^0.8.0")))
 }
 
 ///|

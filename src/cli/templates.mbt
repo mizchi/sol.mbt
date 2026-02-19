@@ -24,7 +24,7 @@ fn template_moon_mod_json(package_name : String, luna_path : String?) -> String 
         #|  "name": "{{PACKAGE_NAME}}",
         #|  "version": "0.1.0",
         #|  "deps": {
-        #|    "mizchi/sol": "0.7.1",
+        #|    "mizchi/sol": "0.8.0",
         #|    "mizchi/mars": "0.3.9",
         #|    "mizchi/luna": {
         #|      "path": "{{LUNA_PATH}}"
@@ -47,7 +47,7 @@ fn template_moon_mod_json(package_name : String, luna_path : String?) -> String 
         #|  "name": "{{PACKAGE_NAME}}",
         #|  "version": "0.1.0",
         #|  "deps": {
-        #|    "mizchi/sol": "0.7.1",
+        #|    "mizchi/sol": "0.8.0",
         #|    "mizchi/mars": "0.3.9",
         #|    "mizchi/luna": "0.12.3",
         #|    "mizchi/signals": "0.6.3",

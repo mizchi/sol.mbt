@@ -236,6 +236,19 @@ sol_link(href="/about", [text("About")])
 })
 ```
 
+`register_sol_routes` でストリーミング応答を使う場合は、`RouterConfig` で有効化します（デフォルトは無効）。
+
+```moonbit
+pub fn config() -> @router.RouterConfig {
+  @router.RouterConfig::default()
+    .with_default_head(head())
+    .with_loader_url("/static/loader.js")
+    .with_streaming_ssr()
+}
+```
+
+> 注: ストリーミング応答は `__LUNA_MAIN__` を含む場合 `root_template` を使い、見つからない場合は組み込み page shell にフォールバックします。
+
 ## モード
 
 Solは3つの使い方を想定しています。

@@ -78,3 +78,41 @@ test "register_route_tree - treats Layout as path grouping" {
   assert_eq(gets[0].0, "/admin/health")
   assert_eq(posts.length(), 0)
 }
+
+///|
+test "legacy_routes_to_sol_routes - keeps layout prefix and route kinds" {
+  let legacy_routes = [
+    @routes.Layout(segment="/admin", layout="ignored-layout", children=[
+      @routes.Page(
+        path="/dashboard",
+        component="dashboard-component",
+        title="Dashboard",
+        meta=[("description", "admin dashboard")],
+      ),
+      @routes.Get(path="/stats", handler="get-stats"),
+      @routes.Post(path="/stats", handler="post-stats"),
+    ]),
+  ]
+  let page_resolver = fn(
+    _component : String,
+    _ctx : Ctx,
+    _params : RouteParams,
+  ) {
+    Some(@server_dom.ServerNode::sync(@luna.text("ok")))
+  }
+  let api_resolver = fn(_handler : String, _ctx : Ctx, _params : RouteParams) {
+    Some(@js.any({ "ok": true }))
+  }
+  let converted = legacy_routes_to_sol_routes(
+    legacy_routes, page_resolver, api_resolver,
+  )
+  let compiled = compile_sol_routes(converted)
+  assert_eq(compiled.length(), 3)
+  assert_eq(compiled[0].pattern, "/admin/dashboard")
+  assert_true(compiled[0].kind is SolRouteKind::Page)
+  assert_eq(compiled[0].layouts.length(), 1)
+  assert_eq(compiled[1].pattern, "/admin/stats")
+  assert_true(compiled[1].kind is SolRouteKind::GetApi)
+  assert_eq(compiled[2].pattern, "/admin/stats")
+  assert_true(compiled[2].kind is SolRouteKind::PostApi)
+}

@@ -24,10 +24,8 @@ fn generate_island_entry_js_v2(
   // Hydrate: from generated __gen__/client package
   let pkg_name = relative_path.split("/").last().unwrap_or(relative_path)
   let build_profile = if mode == "dev" { "debug" } else { "release" }
-  let client_path =
-    "../../../_build/js/\{build_profile}/build/\{relative_path}/\{pkg_name}.js"
-  let hydrate_path =
-    "../../../_build/js/\{build_profile}/build/__gen__/client/client.js"
+  let client_path = "../../../_build/js/\{build_profile}/build/\{relative_path}/\{pkg_name}.js"
+  let hydrate_path = "../../../_build/js/\{build_profile}/build/__gen__/client/client.js"
   if include_hydrate {
     buf.write_string("import { \{func.name} } from '\{client_path}';\n")
     buf.write_string(

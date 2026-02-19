@@ -558,10 +558,7 @@ fn[FS : @env.FileSystem] scan_dynamic_file_with_fs(
     // Store param info in source_path for later template processing
     // Format: path/to/_id_.md?id=<url-encoded-value>
     let source_with_param = build_source_with_dynamic_params(
-      relative_path,
-      param_name,
-      param_value,
-      param_set,
+      relative_path, param_name, param_value, param_set,
     )
     let page = @ssg.PageMeta::{
       source_path: source_with_param,

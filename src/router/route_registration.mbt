@@ -15,6 +15,7 @@ pub fn[E] register_routes(
   loader_url? : String = "/static/loader.js",
   wc_loader_url? : String = "/static/wc-loader.js",
 ) -> Unit {
+  ensure_mars_to_handler_compat()
   let resolved = resolve_router_config(
     config,
     title_prefix~,
@@ -61,7 +62,7 @@ pub fn[E] register_routes(
             c.html(html)
           }
         }
-        None => c.text("Page not found: " + component)
+        None => c.text("Page not found: " + component, status=404)
       }
     })
   }
@@ -160,6 +161,7 @@ pub fn register_server_routes(
   loader_url? : String = "/static/loader.js",
   wc_loader_url? : String = "/static/wc-loader.js",
 ) -> Unit {
+  ensure_mars_to_handler_compat()
   let resolved = resolve_router_config(
     config,
     title_prefix~,
@@ -168,51 +170,116 @@ pub fn register_server_routes(
     loader_url~,
     wc_loader_url~,
   )
-
+  let converted = legacy_routes_to_sol_routes(
+    routes, page_resolver, api_resolver,
+  )
   // Loader URLs are currently reserved for client-loader integration.
   let _ = (resolved.loader_url, resolved.wc_loader_url)
-  let register_page = fn(
-    full_path : String,
-    component : String,
-    title : String,
-  ) {
-    let param_names = extract_route_param_names(full_path)
-    app.get(full_path, async fn(c) {
-      let is_fragment = has_fragment_header(c)
-      let params = extract_route_params(c, is_fragment~, param_names~)
-      match page_resolver(component, c, params) {
-        Some(server_node) => {
-          let node = server_node.resolve()
-          let page_title = format_title(
-            title,
-            title_prefix=resolved.title_prefix,
-            default_title=resolved.default_title,
-          )
-          if is_fragment {
-            let fragment_html = render_fragment_response(
-              node, page_title, false,
-            )
-            send_fragment_response(c, fragment_html)
-          } else {
-            let html = render_page_html(
-              node,
-              page_title,
-              resolved.default_head,
-              false,
-              resolved.root_template,
-            )
-            c.html(html)
-          }
-        }
-        None => c.text("Page not found: " + component)
+  register_sol_routes(app, converted, config=resolved)
+}
+
+///|
+fn identity_layout(
+  _props : PageProps,
+  children : @server_dom.ServerNode,
+) -> @server_dom.ServerNode raise Error {
+  children
+}
+
+///|
+fn page_not_found_node() -> @server_dom.ServerNode {
+  @server_dom.ServerNode::sync(@luna.text(""))
+}
+
+///|
+fn legacy_page_handler_from_resolver(
+  component : String,
+  page_resolver : AsyncPageResolver,
+) -> async (PageProps) -> @server_dom.ServerNode {
+  async fn(props : PageProps) {
+    match page_resolver(component, props.ctx, props.params) {
+      Some(server_node) => server_node
+      None => {
+        props.ctx.text("Page not found: " + component, status=404)
+        page_not_found_node()
       }
-    })
+    }
   }
-  let register_get = fn(full_path : String, handler : String) {
-    register_api_get_route(app, full_path, handler, api_resolver)
+}
+
+///|
+fn legacy_api_handler_from_resolver(
+  handler : String,
+  api_resolver : (String, Ctx, RouteParams) -> @js.Any?,
+) -> async (PageProps) -> @js.Any {
+  async fn(props : PageProps) {
+    match api_resolver(handler, props.ctx, props.params) {
+      Some(json) => json
+      None => {
+        @mars_response.send_json_error(
+          props.ctx,
+          "Handler not found",
+          status=404,
+        )
+        @js_any.json_obj([])
+      }
+    }
   }
-  let register_post = fn(full_path : String, handler : String) {
-    register_api_post_route(app, full_path, handler, api_resolver)
+}
+
+///|
+fn legacy_routes_to_sol_routes(
+  routes : Array[@routes.Routes],
+  page_resolver : AsyncPageResolver,
+  api_resolver : (String, Ctx, RouteParams) -> @js.Any?,
+) -> Array[SolRoutes] {
+  let converted : Array[SolRoutes] = []
+  for route in routes {
+    match route {
+      @routes.Page(path~, component~, title~, meta~) =>
+        converted.push(
+          SolRoutes::Page(
+            path~,
+            handler=PageHandler(
+              legacy_page_handler_from_resolver(component, page_resolver),
+            ),
+            title~,
+            meta~,
+            revalidate=None,
+            cache=None,
+          ),
+        )
+      @routes.Layout(segment~, children~, layout~) => {
+        let _ = layout
+        converted.push(
+          SolRoutes::Layout(
+            segment~,
+            layout=identity_layout,
+            children=legacy_routes_to_sol_routes(
+              children, page_resolver, api_resolver,
+            ),
+          ),
+        )
+      }
+      @routes.Get(path~, handler~) =>
+        converted.push(
+          SolRoutes::Get(
+            path~,
+            handler=ApiHandler(
+              legacy_api_handler_from_resolver(handler, api_resolver),
+            ),
+          ),
+        )
+      @routes.Post(path~, handler~) =>
+        converted.push(
+          SolRoutes::Post(
+            path~,
+            handler=ApiHandler(
+              legacy_api_handler_from_resolver(handler, api_resolver),
+            ),
+          ),
+        )
+    }
   }
-  register_route_tree(routes, "", register_page, register_get, register_post)
+  converted
 }

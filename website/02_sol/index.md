@@ -294,12 +294,6 @@ let combined = m1.then(m2)
 
 // Compose from array
 let pipeline = @middleware.pipeline([m1, m2, m3])
-
-// Conditional execution
-let conditional = @middleware.when(
-  fn(ctx) { ctx.request.method == "POST" },
-  csrf_middleware,
-)
 ```
 
 ## Server Actions
@@ -386,6 +380,19 @@ Async content streaming using `ServerNode::async_`:
   div([text(data)])
 })
 ```
+
+Enable route-level streaming responses with router config (disabled by default):
+
+```moonbit
+pub fn config() -> @router.RouterConfig {
+  @router.RouterConfig::default()
+    .with_default_head(head())
+    .with_loader_url("/static/loader.js")
+    .with_streaming_ssr()
+}
+```
+
+> Note: streaming response uses `root_template` when `__LUNA_MAIN__` exists; otherwise it falls back to built-in page shell.
 
 ## Modes
 

@@ -156,6 +156,11 @@ pub struct RouterConfig {
   wc_loader_url : String
   /// Enable modulepreload for island scripts (default: true)
   enable_preload : Bool
+  /// Enable streaming SSR for full-page responses (default: false)
+  /// Note: fragment responses and ISR(with cache) are always non-streaming.
+  /// Note: streaming uses `root_template` when `__LUNA_MAIN__` exists;
+  ///       otherwise it falls back to built-in page shell.
+  enable_streaming : Bool
   /// Additional library URLs to preload (e.g., ["/static/lib.js"])
   preload_libs : Array[String]
   /// Chunk manifest for resolving shared chunk dependencies
@@ -187,6 +192,7 @@ pub fn RouterConfig::default() -> RouterConfig {
     loader_url: "/static/loader.js",
     wc_loader_url: "/static/wc-loader.js",
     enable_preload: true,
+    enable_streaming: false,
     preload_libs: [],
     chunk_manifest: None,
     root_template: default_root_template(),
@@ -219,6 +225,15 @@ pub fn RouterConfig::with_preload_libs(
   libs : Array[String],
 ) -> RouterConfig {
   { ..self, preload_libs: libs }
+}
+
+///|
+/// Enable/disable streaming SSR for full-page responses.
+pub fn RouterConfig::with_streaming_ssr(
+  self : RouterConfig,
+  enabled? : Bool = true,
+) -> RouterConfig {
+  { ..self, enable_streaming: enabled }
 }
 
 ///|
