@@ -136,6 +136,7 @@ export {
 } from './server-runtime';
 export type {
   ISRRouterConfig,
+  RevalidateOptions,
   CloudflareEnv,
   ExecutionContext,
 } from './server-runtime';

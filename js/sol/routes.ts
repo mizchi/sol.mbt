@@ -183,6 +183,7 @@ export const DEFAULT_ROOT_TEMPLATE = `<!DOCTYPE html>
   <title>__LUNA_TITLE__</title>
   __LUNA_PRELOAD__
   __LUNA_HEAD__
+  __LUNA_META__
 </head>
 <body>
   <div id="__sol__">__LUNA_MAIN__</div>

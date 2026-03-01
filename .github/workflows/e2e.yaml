@@ -11,6 +11,9 @@ jobs:
   # E2E tests with Playwright
   e2e:
     runs-on: ubuntu-latest
+    env:
+      # Use repository secret in CI, fallback to deterministic test token.
+      SOL_REVALIDATE_TOKEN: ${{ secrets.SOL_REVALIDATE_TOKEN || 'e2e-revalidate-token' }}
     steps:
       - uses: actions/checkout@v4
         with:

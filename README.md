@@ -217,6 +217,47 @@ pub fn config() -> RouterConfig {
 | `Layout` | Nested layout group |
 | `WithMiddleware` | Route group with middleware applied |
 
+### TypeScript Runtime: ISR Revalidation Security
+
+When using `js/sol/server-runtime.ts`, `revalidateMiddleware()` now requires
+authentication by default.
+
+- Endpoint default: `POST /api/revalidate`
+- Auth header default: `X-Sol-Revalidate-Token`
+- Token sources:
+  1. `options.token` (explicit)
+  2. Cloudflare env binding `SOL_REVALIDATE_TOKEN`
+  3. Node/Bun process env `SOL_REVALIDATE_TOKEN`
+- If no token is configured, requests are rejected unless `allowUnauthenticated: true`.
+- CI/Deployment recommendation: register `SOL_REVALIDATE_TOKEN` as a secret
+  (e.g. GitHub Actions repository secret).
+
+```ts
+import { revalidateMiddleware } from "@sol/server-runtime";
+import { ISRCacheManager, MemoryCacheAdapter } from "@sol";
+
+app.use(
+  "*",
+  revalidateMiddleware(
+    new ISRCacheManager(new MemoryCacheAdapter()),
+    { token: process.env.SOL_REVALIDATE_TOKEN }
+  )
+);
+```
+
+Internal caller example:
+
+```ts
+await fetch("http://internal-host/api/revalidate", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "X-Sol-Revalidate-Token": process.env.SOL_REVALIDATE_TOKEN!,
+  },
+  body: JSON.stringify({ path: "/docs/getting-started" }),
+});
+```
+
 ## Nested Layouts
 
 Support for hierarchical layout structures:

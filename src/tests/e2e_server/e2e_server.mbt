@@ -8,6 +8,7 @@
 /// Exports a Hono app that can be used from JavaScript
 pub async fn create_app() -> @sol.App {
   let app = @sol.create_app()
+  let app = @sol.serve_static(app)
 
   // Health check
   let _ = app.get("/", async fn(c : @sol.Ctx) -> @http.Response { c.text("ok") })

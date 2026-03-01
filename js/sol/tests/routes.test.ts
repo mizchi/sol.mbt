@@ -199,6 +199,7 @@ describe('DEFAULT_ROOT_TEMPLATE', () => {
     expect(DEFAULT_ROOT_TEMPLATE).toContain('__LUNA_TITLE__');
     expect(DEFAULT_ROOT_TEMPLATE).toContain('__LUNA_PRELOAD__');
     expect(DEFAULT_ROOT_TEMPLATE).toContain('__LUNA_HEAD__');
+    expect(DEFAULT_ROOT_TEMPLATE).toContain('__LUNA_META__');
     expect(DEFAULT_ROOT_TEMPLATE).toContain('__LUNA_MAIN__');
   });
 

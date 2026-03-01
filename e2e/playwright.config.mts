@@ -32,6 +32,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       DEBUG: process.env.DEBUG || "0",
+      SOL_REVALIDATE_TOKEN: process.env.SOL_REVALIDATE_TOKEN || "e2e-revalidate-token",
     },
   },
 });

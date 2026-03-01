@@ -169,6 +169,7 @@ pub fn security_headers_with_config(
       .add_header("X-Content-Type-Options", config.content_type_options)
       .add_header("Referrer-Policy", config.referrer_policy)
       .add_header("Cross-Origin-Opener-Policy", config.coop)
+      .add_header("Cross-Origin-Embedder-Policy", config.coep)
       .add_header("Permissions-Policy", config.permissions_policy)
       .add_header("Content-Security-Policy", config.csp)
 

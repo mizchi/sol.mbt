@@ -10,6 +10,8 @@ import { serve } from "@hono/node-server";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { revalidateMiddleware } from "../js/sol/server-runtime.ts";
+import { ISRCacheManager, MemoryCacheAdapter } from "../js/sol/cache.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
@@ -52,6 +54,15 @@ function promisifyMoonBit<T>(fn: (cont: (v: T) => void, err: (e: Error) => void)
 
 // Create the main Hono app
 const app = new Hono();
+const revalidateToken = process.env.SOL_REVALIDATE_TOKEN || "e2e-revalidate-token";
+
+app.use(
+  "*",
+  revalidateMiddleware(
+    new ISRCacheManager(new MemoryCacheAdapter()),
+    { token: revalidateToken }
+  )
+);
 
 // Health check
 app.get("/", (c) => c.text("ok"));

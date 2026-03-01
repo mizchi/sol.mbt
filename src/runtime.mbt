@@ -704,6 +704,14 @@ extern "js" fn ffi_create_js_response(
   #| (body, contentType) => new Response(body, { headers: { 'Content-Type': contentType } })
 
 ///|
+extern "js" fn ffi_create_js_response_with_status(
+  body : String,
+  content_type : String,
+  status : Int,
+) -> @http.Response =
+  #| (body, contentType, status) => new Response(body, { status, headers: { 'Content-Type': contentType } })
+
+///|
 /// Create a response for static files with security headers
 extern "js" fn ffi_create_static_response(
   body : String,
@@ -711,6 +719,15 @@ extern "js" fn ffi_create_static_response(
   cache_control : String,
 ) -> @http.Response =
   #| (body, contentType, cacheControl) => new Response(body, { headers: { 'Content-Type': contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': cacheControl } })
+
+///|
+extern "js" fn ffi_create_static_response_with_status(
+  body : String,
+  content_type : String,
+  cache_control : String,
+  status : Int,
+) -> @http.Response =
+  #| (body, contentType, cacheControl, status) => new Response(body, { status, headers: { 'Content-Type': contentType, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': cacheControl } })
 
 ///|
 extern "js" fn ffi_read_file_sync(path : String) -> String? =
@@ -736,6 +753,16 @@ pub fn text_response(body : String, content_type : String) -> @http.Response {
 }
 
 ///|
+/// Create a text response with status
+pub fn text_response_with_status(
+  body : String,
+  content_type : String,
+  status : Int,
+) -> @http.Response {
+  ffi_create_js_response_with_status(body, content_type, status)
+}
+
+///|
 /// Create a JavaScript response
 pub fn js_response(body : String) -> @http.Response {
   ffi_create_js_response(body, "application/javascript")
@@ -753,6 +780,18 @@ pub fn static_response(
 }
 
 ///|
+/// Create a static file response with status and security headers
+pub fn static_response_with_status(
+  body : String,
+  content_type : String,
+  status : Int,
+  cache_control? : String,
+) -> @http.Response {
+  let cache = cache_control.unwrap_or("max-age=3600")
+  ffi_create_static_response_with_status(body, content_type, cache, status)
+}
+
+///|
 /// Read file synchronously (for static file serving)
 pub fn read_file_sync(path : String) -> String? {
   ffi_read_file_sync(path)
@@ -762,6 +801,42 @@ pub fn read_file_sync(path : String) -> String? {
 /// Get request pathname from context
 pub fn get_request_path(ctx : Ctx) -> String {
   ffi_get_req_path(ctx.as_any())
+}
+
+///|
+/// Check if a user-provided static file path is safe as a relative path.
+/// Rejects traversal, absolute paths, and windows drive-like paths.
+extern "js" fn ffi_is_safe_static_rel_path(path : String) -> Bool =
+  #| (raw) => {
+  #|   const isSafe = (value) => {
+  #|     if (typeof value !== "string" || value.length === 0) return false;
+  #|     if (value.includes("\0")) return false;
+  #|     if (value.startsWith("/") || value.startsWith("\\")) return false;
+  #|     if (/^[a-zA-Z]:/.test(value)) return false;
+  #|     const normalized = value.replace(/\\/g, "/");
+  #|     const segments = normalized.split("/");
+  #|     for (const seg of segments) {
+  #|       if (seg === "..") return false;
+  #|     }
+  #|     return true;
+  #|   };
+  #|   if (!isSafe(raw)) return false;
+  #|   try {
+  #|     const decoded = decodeURIComponent(raw);
+  #|     return isSafe(decoded);
+  #|   } catch {
+  #|     return false;
+  #|   }
+  #| }
+
+///|
+/// Returns Some(path) if safe, otherwise None.
+fn sanitize_static_relative_path(path : String) -> String? {
+  if ffi_is_safe_static_rel_path(path) {
+    Some(path)
+  } else {
+    None
+  }
 }
 
 ///|
@@ -848,20 +923,43 @@ pub fn serve_static_dir(app : App, config : StaticDirServeConfig) -> App {
   app.get(prefix + "/*", fn(c) {
     let path = get_request_path(c)
     let start_idx = prefix.length() + 1
-    let rest = path[start_idx:].to_string().trim_end(chars="/").to_string()
+    let rest_raw = path[start_idx:].to_string().trim_end(chars="/").to_string()
 
     // Try exact path first, then as directory index
-    if rest.is_empty() {
+    if rest_raw.is_empty() {
       serve_static_html(c, local_dir, "index.html")
-    } else if rest.has_suffix(".html") {
-      serve_static_html(c, local_dir, rest)
-    } else if rest.has_suffix(".css") {
-      serve_static_css(c, local_dir, rest)
-    } else if rest.has_suffix(".js") {
-      serve_static_js(c, local_dir, rest)
+    } else if rest_raw.has_suffix(".html") {
+      match sanitize_static_relative_path(rest_raw) {
+        Some(rest) => serve_static_html(c, local_dir, rest)
+        None =>
+          text_response_with_status("Not found: " + rest_raw, "text/plain", 404)
+      }
+    } else if rest_raw.has_suffix(".css") {
+      match sanitize_static_relative_path(rest_raw) {
+        Some(rest) => serve_static_css(c, local_dir, rest)
+        None =>
+          text_response_with_status(
+            "/* Not found: " + rest_raw + " */",
+            "text/css",
+            404,
+          )
+      }
+    } else if rest_raw.has_suffix(".js") {
+      match sanitize_static_relative_path(rest_raw) {
+        Some(rest) => serve_static_js(c, local_dir, rest)
+        None =>
+          text_response_with_status(
+            "// Not found: " + rest_raw, "application/javascript", 404,
+          )
+      }
     } else {
       // Try as directory with index.html
-      serve_static_html(c, local_dir, rest + "/index.html")
+      let index_path = rest_raw + "/index.html"
+      match sanitize_static_relative_path(index_path) {
+        Some(rest) => serve_static_html(c, local_dir, rest)
+        None =>
+          text_response_with_status("Not found: " + rest_raw, "text/plain", 404)
+      }
     }
   })
 }
@@ -872,10 +970,17 @@ fn serve_static_html(
   local_dir : String,
   filename : String,
 ) -> @http.Response {
-  let path = local_dir + "/" + filename
-  match read_file_sync(path) {
-    Some(content) => html_response(content)
-    None => text_response("Not found: " + filename, "text/plain")
+  match sanitize_static_relative_path(filename) {
+    Some(safe_filename) => {
+      let path = local_dir + "/" + safe_filename
+      match read_file_sync(path) {
+        Some(content) => html_response(content)
+        None =>
+          text_response_with_status("Not found: " + filename, "text/plain", 404)
+      }
+    }
+    None =>
+      text_response_with_status("Not found: " + filename, "text/plain", 404)
   }
 }
 
@@ -885,10 +990,25 @@ fn serve_static_css(
   local_dir : String,
   filename : String,
 ) -> @http.Response {
-  let path = local_dir + "/" + filename
-  match read_file_sync(path) {
-    Some(content) => text_response(content, "text/css")
-    None => text_response("/* Not found: " + filename + " */", "text/css")
+  match sanitize_static_relative_path(filename) {
+    Some(safe_filename) => {
+      let path = local_dir + "/" + safe_filename
+      match read_file_sync(path) {
+        Some(content) => text_response(content, "text/css")
+        None =>
+          text_response_with_status(
+            "/* Not found: " + filename + " */",
+            "text/css",
+            404,
+          )
+      }
+    }
+    None =>
+      text_response_with_status(
+        "/* Not found: " + filename + " */",
+        "text/css",
+        404,
+      )
   }
 }
 
@@ -898,10 +1018,23 @@ fn serve_static_js(
   local_dir : String,
   filename : String,
 ) -> @http.Response {
-  let path = local_dir + "/" + filename
-  match read_file_sync(path) {
-    Some(content) => text_response(content, "application/javascript")
-    None => text_response("// Not found: " + filename, "application/javascript")
+  match sanitize_static_relative_path(filename) {
+    Some(safe_filename) => {
+      let path = local_dir + "/" + safe_filename
+      match read_file_sync(path) {
+        Some(content) => text_response(content, "application/javascript")
+        None =>
+          text_response_with_status(
+            "// Not found: " + filename, "application/javascript", 404,
+          )
+      }
+    }
+    None =>
+      text_response_with_status(
+        "// Not found: " + filename,
+        "application/javascript",
+        404,
+      )
   }
 }
 
@@ -925,7 +1058,17 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
   app.get(prefix + "/*", fn(c) {
     let path = get_request_path(c)
     let start_idx = prefix.length() + 1
-    let filename = path[start_idx:].to_string() // Remove prefix + "/"
+    let raw_filename = path[start_idx:].to_string() // Remove prefix + "/"
+    let filename = match sanitize_static_relative_path(raw_filename) {
+      Some(v) => v
+      None =>
+        return static_response_with_status(
+          "Not found: " + raw_filename,
+          "text/plain",
+          404,
+          cache_control=cache_ctl,
+        )
+    }
 
     // Check mappings
     for mapping in mappings {
@@ -947,9 +1090,10 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
             )
           }
           None =>
-            return static_response(
+            return static_response_with_status(
               "// " + url_file + " not found",
               "application/javascript",
+              404,
               cache_control=cache_ctl,
             )
         }
@@ -983,9 +1127,10 @@ pub fn serve_static(app : App, config? : StaticFileConfig) -> App {
         static_response(c, content_type, cache_control=cache_ctl)
       }
       None =>
-        static_response(
+        static_response_with_status(
           "Not found: " + filename,
           "text/plain",
+          404,
           cache_control=cache_ctl,
         )
     }
