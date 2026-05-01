@@ -642,19 +642,13 @@ moon test --package mizchi/astra/middleware
 ```
 Expected: both tests pass.
 
-- [ ] **Step 5: Replace the lib.mbt placeholder**
+- [ ] **Step 5: Leave `lib.mbt` as a doc-comment file (no re-exports)**
 
-Edit `astra/src/lib.mbt`:
-```moonbit
-// astra public surface lives in submodules (`middleware`, `render`, `tree`).
-// This file holds re-exports for ergonomic access.
+`lib.mbt` stays as a doc-comment file. Public entry is `@middleware.create(...)` because shared types in `mizchi/astra` are imported by `mizchi/astra/middleware`, creating a cycle if `lib.mbt` re-exports from middleware (`astra` → `astra/middleware` → `astra`).
 
-pub typealias @middleware.Middleware as Middleware
+A future task should lift the shared types currently in `astra/src/types.mbt` (e.g. `SsgConfig`, `BuildContext`, `PageMeta`, `DocumentTree`, `SidebarGroup`, `Frontmatter`, …) to `mizchi/astra/types`. Once `astra/middleware` depends on `astra/types` instead of `astra`, the cycle disappears and `astra/src/lib.mbt` can re-export `Middleware` and `create` for ergonomic access.
 
-pub fn create(config : SsgConfig, cwd~ : String = ".") -> Middleware = @middleware.create
-```
-
-(Drop the old `placeholder()` function; tests in Task 4 must be updated to call `create(SsgConfig::default()).handler()` instead. Re-run them.)
+For Task 8 we accept the cycle as a known limitation. The `placeholder()` function originally added in Task 4 is removed; tests in Task 4 must be updated to call `@middleware.create(SsgConfig::default()).handler()` instead. Re-run them.
 
 - [ ] **Step 6: Commit**
 
@@ -675,7 +669,7 @@ Append to `astra/src/middleware/middleware_test.mbt`:
 ```moonbit
 test "GET /sol-island.js returns the bundled island loader script" {
   let cfg = @astra.SsgConfig::default()
-  let mw = create(cfg, cwd=".")
+  let mw = @middleware.create(cfg, cwd=".")
   let app = @mars.Server::new()
   app.middleware(mw.handler())
   let res = @mars.test_request(app, @mars.Request::get("/sol-island.js"))
